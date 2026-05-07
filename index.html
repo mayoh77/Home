@@ -37,6 +37,7 @@
     const db   = getFirestore(app);
 
     let currentUser = null;
+    const sitesMap = {}; // global store: id → site data
 
     // ── Auth State ────────────────────────────────
     onAuthStateChanged(auth, user => {
@@ -84,7 +85,7 @@
         const q = query(collection(db, "sites"), orderBy("order", "asc"));
         const snap = await getDocs(q);
         const sites = [];
-        snap.forEach(d => sites.push({ id: d.id, ...d.data() }));
+        snap.forEach(d => { const s = { id: d.id, ...d.data() }; sitesMap[d.id] = s; sites.push(s); });
 
         if (sites.length === 0) {
           empty.style.display = "flex";
@@ -136,7 +137,7 @@
         </a>
         ${currentUser ? `
           <div class="card-actions">
-            <button class="action-btn edit-btn" onclick="openEditModal('${site.id}', ${JSON.stringify(site).replace(/'/g, "\\'")})" title="Bearbeiten">
+            <button class="action-btn edit-btn" onclick="openEditModal('${site.id}')" title="Bearbeiten">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
                 <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -204,7 +205,8 @@
       }
     };
 
-    window.openEditModal = (id, site) => {
+    window.openEditModal = (id) => {
+      const site = sitesMap[id] || {};
       document.getElementById("modal-title-heading").textContent = "Website bearbeiten";
       document.getElementById("modal-id").value            = id;
       document.getElementById("field-title").value         = site.title || "";
