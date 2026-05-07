@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio — Web Showcase</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ─────────────────────────────────────────────
+    //  🔧 FIREBASE KONFIGURATION — hier anpassen!
+    // ─────────────────────────────────────────────
+    const firebaseConfig = {
+      apiKey:            "DEIN_API_KEY",
+      authDomain:        "DEIN_PROJECT.firebaseapp.com",
+      projectId:         "DEIN_PROJECT_ID",
+      storageBucket:     "DEIN_PROJECT.appspot.com",
+      messagingSenderId: "DEINE_SENDER_ID",
+      appId:             "DEINE_APP_ID"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    let currentUser = null;
+
+    // ── Auth State ────────────────────────────────
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (user) {
+        document.getElementById("admin-bar").classList.add("visible");
+        document.getElementById("admin-avatar").src = user.photoURL || "";
+        document.getElementById("admin-name").textContent = user.displayName || user.email;
+        document.getElementById("btn-login").style.display  = "none";
+        document.getElementById("btn-logout").style.display = "flex";
+        document.getElementById("btn-add").style.display    = "flex";
+        loadSites();
+      } else {
+        document.getElementById("admin-bar").classList.remove("visible");
+        document.getElementById("btn-login").style.display  = "flex";
+        document.getElementById("btn-logout").style.display = "none";
+        document.getElementById("btn-add").style.display    = "none";
+        loadSites();
+      }
+    });
+
+    // ── Google Login ──────────────────────────────
+    window.googleLogin = async () => {
+      const provider = new GoogleAuthProvider();
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error(e);
+        showToast("Login fehlgeschlagen: " + e.message, "error");
+      }
+    };
+
+    window.googleLogout = async () => {
+      await signOut(auth);
+      showToast("Abgemeldet.");
+    };
+
+    // ── Load Sites ────────────────────────────────
+    window.loadSites = async () => {
+      const grid = document.getElementById("sites-grid");
+      const empty = document.getElementById("empty-state");
+      grid.innerHTML = "";
+
+      try {
+        const q = query(collection(db, "sites"), orderBy("order", "asc"));
+        const snap = await getDocs(q);
+        const sites = [];
+        snap.forEach(d => sites.push({ id: d.id, ...d.data() }));
+
+        if (sites.length === 0) {
+          empty.style.display = "flex";
+        } else {
+          empty.style.display = "none";
+          sites.forEach((site, i) => {
+            const card = createCard(site, i);
+            grid.appendChild(card);
+          });
+        }
+      } catch (e) {
+        console.error(e);
+        empty.style.display = "flex";
+      }
+    };
+
+    // ── Create Card DOM ───────────────────────────
+    function createCard(site, index) {
+      const card = document.createElement("article");
+      card.className = "site-card";
+      card.style.animationDelay = `${index * 80}ms`;
+
+      const faviconUrl = site.url
+        ? `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(site.url)}`
+        : "";
+
+      card.innerHTML = `
+        <a href="${site.url}" target="_blank" rel="noopener" class="card-link" aria-label="${site.title}">
+          <div class="card-preview">
+            ${site.thumbnail
+              ? `<img src="${site.thumbnail}" alt="${site.title}" class="card-thumb" loading="lazy" />`
+              : `<div class="card-thumb-placeholder">
+                  ${faviconUrl ? `<img src="${faviconUrl}" class="favicon-large" alt="" />` : ""}
+                  <span class="placeholder-letter">${(site.title || "?")[0].toUpperCase()}</span>
+                </div>`
+            }
+            <div class="card-overlay">
+              <svg class="visit-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
+              </svg>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-tag">${site.category || "Website"}</div>
+            <h3 class="card-title">${site.title}</h3>
+            ${site.description ? `<p class="card-desc">${site.description}</p>` : ""}
+            <div class="card-url">${prettifyUrl(site.url)}</div>
+          </div>
+        </a>
+        ${currentUser ? `
+          <div class="card-actions">
+            <button class="action-btn edit-btn" onclick="openEditModal('${site.id}', ${JSON.stringify(site).replace(/'/g, "\\'")})" title="Bearbeiten">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
+            <button class="action-btn delete-btn" onclick="deleteSite('${site.id}')" title="Löschen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
+          </div>
+        ` : ""}
+      `;
+      return card;
+    }
+
+    // ── Add / Edit Site ───────────────────────────
+    window.saveSite = async () => {
+      const id    = document.getElementById("modal-id").value;
+      const data  = {
+        title:       document.getElementById("field-title").value.trim(),
+        url:         document.getElementById("field-url").value.trim(),
+        description: document.getElementById("field-desc").value.trim(),
+        category:    document.getElementById("field-cat").value.trim(),
+        thumbnail:   document.getElementById("field-thumb").value.trim(),
+        order:       parseInt(document.getElementById("field-order").value) || 0,
+      };
+
+      if (!data.title || !data.url) {
+        showToast("Titel und URL sind Pflichtfelder.", "error");
+        return;
+      }
+
+      const btn = document.getElementById("modal-save-btn");
+      btn.textContent = "Speichern…";
+      btn.disabled = true;
+
+      try {
+        if (id) {
+          await updateDoc(doc(db, "sites", id), data);
+          showToast("Website aktualisiert ✓");
+        } else {
+          await addDoc(collection(db, "sites"), data);
+          showToast("Website hinzugefügt ✓");
+        }
+        closeModal();
+        loadSites();
+      } catch (e) {
+        showToast("Fehler: " + e.message, "error");
+      } finally {
+        btn.textContent = "Speichern";
+        btn.disabled = false;
+      }
+    };
+
+    window.deleteSite = async (id) => {
+      if (!confirm("Website wirklich löschen?")) return;
+      try {
+        await deleteDoc(doc(db, "sites", id));
+        showToast("Gelöscht.");
+        loadSites();
+      } catch (e) {
+        showToast("Fehler: " + e.message, "error");
+      }
+    };
+
+    window.openEditModal = (id, site) => {
+      document.getElementById("modal-title-heading").textContent = "Website bearbeiten";
+      document.getElementById("modal-id").value            = id;
+      document.getElementById("field-title").value         = site.title || "";
+      document.getElementById("field-url").value           = site.url || "";
+      document.getElementById("field-desc").value          = site.description || "";
+      document.getElementById("field-cat").value           = site.category || "";
+      document.getElementById("field-thumb").value         = site.thumbnail || "";
+      document.getElementById("field-order").value         = site.order || 0;
+      openModal();
+    };
+
+    // initial load
+    loadSites();
+  </script>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════  BACKGROUND  ═══════════════════ -->
+<div class="bg-noise"></div>
+<div class="bg-glow bg-glow-1"></div>
+<div class="bg-glow bg-glow-2"></div>
+
+<!-- ═══════════════════  HEADER  ═══════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-mark">◈</span>
+      <span class="logo-text">Web<em>Folio</em></span>
+    </div>
+
+    <nav class="header-nav">
+      <button id="btn-login"  class="btn btn-ghost" onclick="googleLogin()">
+        <svg viewBox="0 0 24 24" width="16" height="16">
+          <path fill="#EA4335" d="M5.26620003,9.76452941 C6.19878754,6.93863203 8.85444915,4.90909091 12,4.90909091 C13.6909091,4.90909091 15.2181818,5.50909091 16.4181818,6.49090909 L19.9090909,3 C17.7818182,1.14545455 15.0545455,0 12,0 C7.27006974,0 3.1977497,2.69829785 1.23999023,6.65002441 L5.26620003,9.76452941 Z"/>
+          <path fill="#34A853" d="M16.0407269,18.0125889 C14.9509167,18.7163016 13.5660892,19.0909091 12,19.0909091 C8.86648613,19.0909091 6.21911939,17.076871 5.27698177,14.2678769 L1.23746264,17.3349879 C3.19279051,21.2936293 7.26500293,24 12,24 C14.9328362,24 17.7353462,22.9573905 19.834192,20.9995801 L16.0407269,18.0125889 Z"/>
+          <path fill="#4A90E2" d="M19.834192,20.9995801 C22.0291676,18.9520994 23.4545455,15.903663 23.4545455,12 C23.4545455,11.2909091 23.3454545,10.5272727 23.1818182,9.81818182 L12,9.81818182 L12,14.4545455 L18.4363636,14.4545455 C18.1187732,16.013626 17.2662994,17.2212117 16.0407269,18.0125889 L19.834192,20.9995801 Z"/>
+          <path fill="#FBBC05" d="M5.27698177,14.2678769 C5.03832634,13.556323 4.90909091,12.7937589 4.90909091,12 C4.90909091,11.2182781 5.03443647,10.4668121 5.26620003,9.76452941 L1.23999023,6.65002441 C0.43658717,8.26043162 0,10.0753848 0,12 C0,13.9195484 0.444780743,15.7301709 1.23746264,17.3349879 L5.27698177,14.2678769 Z"/>
+        </svg>
+        Admin Login
+      </button>
+      <button id="btn-add"    class="btn btn-gold"  onclick="openAddModal()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Hinzufügen
+      </button>
+      <button id="btn-logout" class="btn btn-ghost" onclick="googleLogout()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        Abmelden
+      </button>
+    </nav>
+  </div>
+
+  <!-- Admin Bar -->
+  <div id="admin-bar" class="admin-bar">
+    <img id="admin-avatar" src="" alt="" class="admin-avatar" />
+    <span>Eingeloggt als <strong id="admin-name"></strong></span>
+    <span class="admin-pill">Admin</span>
+  </div>
+</header>
+
+<!-- ═══════════════════  HERO  ═══════════════════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-eyebrow">Digital Portfolio</p>
+    <h1 class="hero-title">
+      Ausgewählte<br />
+      <em>Webprojekte</em>
+    </h1>
+    <p class="hero-subtitle">Eine kuratierte Sammlung digitaler Erlebnisse &amp; moderner Web-Projekte</p>
+    <div class="hero-line"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════  GRID  ═══════════════════ -->
+<main class="main-content">
+  <div id="sites-grid" class="sites-grid"></div>
+
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div class="empty-icon">◈</div>
+    <h3>Noch keine Projekte</h3>
+    <p>Melde dich als Admin an, um deine ersten Websites hinzuzufügen.</p>
+  </div>
+</main>
+
+<!-- ═══════════════════  FOOTER  ═══════════════════ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span class="logo-mark">◈</span>
+    <span>WebFolio — Crafted with precision</span>
+  </div>
+</footer>
+
+<!-- ═══════════════════  MODAL  ═══════════════════ -->
+<div id="modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h2 id="modal-title-heading" class="modal-heading">Website hinzufügen</h2>
+      <button class="modal-close" onclick="closeModal()" aria-label="Schließen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <input type="hidden" id="modal-id" />
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Titel <span class="req">*</span></label>
+        <input id="field-title" class="form-input" type="text" placeholder="Mein Projekt" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">URL <span class="req">*</span></label>
+        <input id="field-url" class="form-input" type="url" placeholder="https://beispiel.de" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beschreibung</label>
+        <textarea id="field-desc" class="form-input form-textarea" placeholder="Kurze Beschreibung des Projekts…" rows="3"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Kategorie</label>
+          <input id="field-cat" class="form-input" type="text" placeholder="z. B. E-Commerce" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Reihenfolge</label>
+          <input id="field-order" class="form-input" type="number" placeholder="0" value="0" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vorschaubild-URL <span class="hint">(optional)</span></label>
+        <input id="field-thumb" class="form-input" type="url" placeholder="https://…/screenshot.jpg" />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Abbrechen</button>
+      <button id="modal-save-btn" class="btn btn-gold" onclick="saveSite()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════  TOAST  ═══════════════════ -->
+<div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
