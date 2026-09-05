@@ -1,1 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wasserwaage</title>
+<style>
+  :root{
+    --bg: #14171A;
+    --bg-2: #0E1113;
+    --panel: #1D2226;
+    --panel-line: #2C3338;
+    --lcd-bg: #0A0D0A;
+    --lcd-digit: #8CFF6B;
+    --lcd-digit-dim: #2E4128;
+    --level-ok: #7CFF8F;
+    --liquid: #F2C14E;
+    --liquid-dim: #8A6A26;
+    --accent: #F2B705;
+    --text: #E7ECEE;
+    --text-dim: #8B979C;
+    --text-faint: #4E585C;
+    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-lcd: 'SF Mono', 'DejaVu Sans Mono', 'Courier New', ui-monospace, monospace;
+  }
 
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body{
+    margin: 0;
+    min-height: 100%;
+    background:
+      radial-gradient(140% 100% at 50% 0%, #22282C 0%, var(--bg) 55%, var(--bg-2) 100%);
+    color: var(--text);
+    font-family: var(--font-ui);
+    overscroll-behavior: none;
+  }
+
+  .screen{
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 26px 20px 34px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .title{
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .modes{
+    display: flex;
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .modes button{
+    border: none;
+    background: none;
+    color: var(--text-dim);
+    font-size: 12.5px;
+    font-family: var(--font-ui);
+    padding: 6px 11px;
+    border-radius: 7px;
+    cursor: pointer;
+  }
+  .modes button.active{
+    background: var(--accent);
+    color: #241C05;
+    font-weight: 600;
+  }
+
+  .status-line{
+    font-size: 12px;
+    color: var(--text-faint);
+    text-align: center;
+    min-height: 16px;
+  }
+
+  .lcd{
+    background: var(--lcd-bg);
+    border: 1px solid #05070500;
+    border-radius: 16px;
+    padding: 20px 10px 16px;
+    text-align: center;
+    box-shadow: inset 0 0 0 1px #000, inset 0 2px 10px rgba(0,0,0,0.6);
+  }
+  .lcd-value{
+    font-family: var(--font-lcd);
+    font-size: 58px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--lcd-digit-dim);
+    text-shadow: none;
+    transition: color 0.25s ease, text-shadow 0.25s ease;
+  }
+  .lcd-value .deg{ font-size: 30px; }
+  .lcd.live .lcd-value{
+    color: var(--lcd-digit);
+    text-shadow: 0 0 10px rgba(140,255,107,0.35);
+  }
+  .lcd.level .lcd-value{
+    color: var(--level-ok);
+    text-shadow: 0 0 16px rgba(124,255,143,0.6);
+  }
+  .lcd-sub{
+    margin-top: 6px;
+    font-family: var(--font-lcd);
+    font-size: 13px;
+    color: var(--lcd-digit-dim);
+    letter-spacing: 1px;
+  }
+  .lcd.live .lcd-sub{ color: #4C6E44; }
+  .lcd.level .lcd-sub{ color: #3F7A4A; }
+
+  .stage{
+    display: flex;
+    justify-content: center;
+    padding: 6px 0 2px;
+    touch-action: none;
+  }
+
+  /* Bullseye */
+  .bullseye-ring{ fill: none; stroke: var(--panel-line); }
+  .bullseye-tol{ fill: rgba(124,255,143,0.06); stroke: rgba(124,255,143,0.35); stroke-width: 1.5; }
+  .bullseye-cross{ stroke: var(--text-faint); stroke-width: 1; }
+  .bubble{
+    transition: transform 0.12s linear;
+  }
+  .bubble-core{ fill: url(#liquidGradient); }
+  .bubble-core.ok{ fill: url(#liquidGradientOk); }
+  .bubble-glint{ fill: rgba(255,255,255,0.35); }
+
+  /* Tube vial */
+  .vial-body{ fill: rgba(255,255,255,0.02); stroke: var(--panel-line); stroke-width: 2; }
+  .vial-tolerance{ fill: rgba(124,255,143,0.08); }
+  .vial-tick{ stroke: var(--text-faint); stroke-width: 1; }
+  .vial-bubble{ fill: url(#liquidGradient); transition: transform 0.12s linear; }
+  .vial-bubble.ok{ fill: url(#liquidGradientOk); }
+
+  .controls{
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+  .ctrl-btn{
+    background: var(--panel);
+    border: 1px solid var(--panel-line);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 13.5px;
+    padding: 11px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .ctrl-btn:active{ transform: scale(0.96); background: #262D31; }
+  .ctrl-btn.primary{
+    background: var(--accent);
+    color: #241C05;
+    font-weight: 600;
+    border: none;
+  }
+
+  .hint{
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <header>
+    <div class="title">Wasserwaage</div>
+    <div class="modes">
+      <button id="modeFlat" class="active">Fläche</button>
+      <button id="modeEdge">Kante</button>
+    </div>
+  </header>
+
+  <div class="status-line" id="statusLine">Sensoren werden gestartet …</div>
+
+  <div class="lcd" id="lcd">
+    <div class="lcd-value" id="lcdValue">--<span class="deg">°</span></div>
+    <div class="lcd-sub" id="lcdSub">X 0.0°&nbsp;&nbsp;&nbsp;Y 0.0°</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <!-- Bullseye level -->
+    <svg id="bullseyeSvg" width="230" height="230" viewBox="0 0 230 230">
+      <defs>
+        <radialGradient id="liquidGradient" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#FBE18C"/>
+          <stop offset="60%" stop-color="#F2C14E"/>
+          <stop offset="100%" stop-color="#B98A2E"/>
+        </radialGradient>
+        <radialGradient id="liquidGradientOk" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#D9FFDD"/>
+          <stop offset="55%" stop-color="#7CFF8F"/>
+          <stop offset="100%" stop-color="#2E9A47"/>
+        </radialGradient>
+      </defs>
+      <circle class="bullseye-ring" cx="115" cy="115" r="98" stroke-width="2"/>
+      <circle class="bullseye-tol" cx="115" cy="115" r="26"/>
+      <line class="bullseye-cross" x1="115" y1="30" x2="115" y2="200"/>
+      <line class="bullseye-cross" x1="30" y1="115" x2="200" y2="115"/>
+      <g class="bubble" id="bullseyeBubble">
+        <circle class="bubble-core" id="bullseyeBubbleCore" cx="115" cy="115" r="24"/>
+        <circle class="bubble-glint" cx="108" cy="107" r="6"/>
+      </g>
+    </svg>
+
+    <!-- Tube vial -->
+    <svg id="vialSvg" width="320" height="90" viewBox="0 0 320 90" style="display:none">
+      <defs>
+        <radialGradient id="liquidGradientV" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#FBE18C"/>
+          <stop offset="100%" stop-color="#B98A2E"/>
+        </radialGradient>
+      </defs>
+      <rect class="vial-body" x="8" y="18" width="304" height="54" rx="27"/>
+      <rect class="vial-tolerance" x="140" y="18" width="40" height="54"/>
+      <line class="vial-tick" x1="160" y1="8" x2="160" y2="18"/>
+      <line class="vial-tick" x1="140" y1="12" x2="140" y2="18"/>
+      <line class="vial-tick" x1="180" y1="12" x2="180" y2="18"/>
+      <line class="vial-tick" x1="80" y1="14" x2="80" y2="18"/>
+      <line class="vial-tick" x1="240" y1="14" x2="240" y2="18"/>
+      <g id="vialBubbleGroup">
+        <ellipse class="vial-bubble" id="vialBubbleCore" cx="160" cy="45" rx="26" ry="20"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="controls">
+    <button class="ctrl-btn" id="calibrateBtn">Kalibrieren</button>
+    <button class="ctrl-btn primary" id="permissionBtn" style="display:none">Sensoren aktivieren</button>
+  </div>
+
+  <div class="hint" id="hintText">Am besten im Hochformat verwenden. Gerät flach auf die Fläche legen oder an die Kante halten, bis die Blase mittig steht.</div>
+
+</div>
+
+<script>
+(function(){
+  var mode = 'flat'; // 'flat' | 'edge'
+  var sensorsActive = false;
+  var manualMode = false;
+  var offsetBeta = 0, offsetGamma = 0;
+  var rawBeta = 0, rawGamma = 0;
+  var TOLERANCE = 0.6; // degrees considered "level"
+  var MAX_ANGLE = 30; // angle mapped to full bubble travel
+
+  var statusLine = document.getElementById('statusLine');
+  var lcd = document.getElementById('lcd');
+  var lcdValue = document.getElementById('lcdValue');
+  var lcdSub = document.getElementById('lcdSub');
+  var bullseyeSvg = document.getElementById('bullseyeSvg');
+  var vialSvg = document.getElementById('vialSvg');
+  var bullseyeBubble = document.getElementById('bullseyeBubble');
+  var bullseyeBubbleCore = document.getElementById('bullseyeBubbleCore');
+  var vialBubbleGroup = document.getElementById('vialBubbleGroup');
+  var vialBubbleCore = document.getElementById('vialBubbleCore');
+  var permissionBtn = document.getElementById('permissionBtn');
+  var calibrateBtn = document.getElementById('calibrateBtn');
+  var stage = document.getElementById('stage');
+  var hintText = document.getElementById('hintText');
+
+  var wasLevel = false;
+
+  function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+  function currentAngles(){
+    return {
+      x: rawGamma - offsetGamma,
+      y: rawBeta - offsetBeta
+    };
+  }
+
+  function render(){
+    var a = currentAngles();
+    var x = clamp(a.x, -90, 90);
+    var y = clamp(a.y, -90, 90);
+
+    if(mode === 'flat'){
+      var mag = Math.sqrt(x*x + y*y);
+      var isLevel = mag <= TOLERANCE;
+      lcdValue.innerHTML = mag.toFixed(1) + '<span class="deg">&#176;</span>';
+      lcdSub.textContent = 'X ' + x.toFixed(1) + '\u00B0    Y ' + y.toFixed(1) + '\u00B0';
+      updateLcdState(isLevel);
+
+      var dx = -clamp(x, -MAX_ANGLE, MAX_ANGLE) / MAX_ANGLE * 74;
+      var dy = -clamp(y, -MAX_ANGLE, MAX_ANGLE) / MAX_ANGLE * 74;
+      bullseyeBubble.setAttribute('transform', 'translate(' + dx.toFixed(1) + ',' + dy.toFixed(1) + ')');
+      bullseyeBubbleCore.classList.toggle('ok', isLevel);
+      handleLevelTransition(isLevel);
+    } else {
+      var isLevelEdge = Math.abs(x) <= TOLERANCE;
+      lcdValue.innerHTML = x.toFixed(1) + '<span class="deg">&#176;</span>';
+      lcdSub.textContent = 'Neigung links / rechts';
+      updateLcdState(isLevelEdge);
+
+      var dxv = -clamp(x, -MAX_ANGLE, MAX_ANGLE) / MAX_ANGLE * 118;
+      vialBubbleGroup.setAttribute('transform', 'translate(' + dxv.toFixed(1) + ',0)');
+      vialBubbleCore.classList.toggle('ok', isLevelEdge);
+      handleLevelTransition(isLevelEdge);
+    }
+  }
+
+  function updateLcdState(isLevel){
+    lcd.classList.toggle('live', sensorsActive || manualMode);
+    lcd.classList.toggle('level', (sensorsActive || manualMode) && isLevel);
+  }
+
+  function handleLevelTransition(isLevel){
+    if(isLevel && !wasLevel && navigator.vibrate){
+      navigator.vibrate(25);
+    }
+    wasLevel = isLevel;
+  }
+
+  function onOrientation(e){
+    if(e.beta === null || e.gamma === null) return;
+    sensorsActive = true;
+    manualMode = false;
+    rawBeta = e.beta;
+    rawGamma = e.gamma;
+    statusLine.textContent = 'Sensor aktiv';
+    render();
+  }
+
+  function startSensors(){
+    if(typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+      permissionBtn.style.display = 'inline-block';
+      permissionBtn.addEventListener('click', function(){
+        DeviceOrientationEvent.requestPermission().then(function(result){
+          if(result === 'granted'){
+            permissionBtn.style.display = 'none';
+            window.addEventListener('deviceorientation', onOrientation);
+            statusLine.textContent = 'Sensor aktiv';
+          } else {
+            statusLine.textContent = 'Sensorzugriff verweigert – manuelle Steuerung per Ziehen';
+            enableManualMode();
+          }
+        }).catch(function(){
+          statusLine.textContent = 'Sensor nicht verfügbar – manuelle Steuerung per Ziehen';
+          enableManualMode();
+        });
+      });
+      statusLine.textContent = 'Tippe auf „Sensoren aktivieren“';
+    } else {
+      window.addEventListener('deviceorientation', onOrientation);
+      setTimeout(function(){
+        if(!sensorsActive){
+          statusLine.textContent = 'Kein Sensor gefunden – manuelle Steuerung per Ziehen';
+          enableManualMode();
+        }
+      }, 1500);
+    }
+  }
+
+  function enableManualMode(){
+    manualMode = true;
+    render();
+  }
+
+  var dragging = false;
+  function pointToAngles(clientX, clientY, rect){
+    var relX = (clientX - rect.left - rect.width/2) / (rect.width/2);
+    var relY = (clientY - rect.top - rect.height/2) / (rect.height/2);
+    return {
+      gamma: clamp(relX, -1, 1) * MAX_ANGLE,
+      beta: clamp(relY, -1, 1) * MAX_ANGLE
+    };
+  }
+
+  function handlePointer(clientX, clientY){
+    if(sensorsActive) return;
+    manualMode = true;
+    var svg = mode === 'flat' ? bullseyeSvg : vialSvg;
+    var rect = svg.getBoundingClientRect();
+    var angles = pointToAngles(clientX, clientY, rect);
+    rawGamma = angles.gamma + offsetGamma;
+    rawBeta = (mode === 'flat' ? angles.beta : 0) + offsetBeta;
+    render();
+  }
+
+  stage.addEventListener('pointerdown', function(e){ dragging = true; handlePointer(e.clientX, e.clientY); });
+  stage.addEventListener('pointermove', function(e){ if(dragging) handlePointer(e.clientX, e.clientY); });
+  window.addEventListener('pointerup', function(){ dragging = false; });
+
+  calibrateBtn.addEventListener('click', function(){
+    offsetBeta = rawBeta;
+    offsetGamma = rawGamma;
+    if(navigator.vibrate) navigator.vibrate(15);
+    render();
+  });
+
+  document.getElementById('modeFlat').addEventListener('click', function(){ setMode('flat'); });
+  document.getElementById('modeEdge').addEventListener('click', function(){ setMode('edge'); });
+
+  function setMode(m){
+    mode = m;
+    document.getElementById('modeFlat').classList.toggle('active', m === 'flat');
+    document.getElementById('modeEdge').classList.toggle('active', m === 'edge');
+    bullseyeSvg.style.display = m === 'flat' ? 'block' : 'none';
+    vialSvg.style.display = m === 'edge' ? 'block' : 'none';
+    hintText.textContent = m === 'flat'
+      ? 'Gerät flach auf die Fläche legen, bis die Blase in der Mitte steht.'
+      : 'Gerät hochkant an die Kante halten, bis die Blase in der Mitte steht.';
+    render();
+  }
+
+  startSensors();
+  render();
+})();
+</script>
+</body>
+</html>
