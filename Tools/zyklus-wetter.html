@@ -100,6 +100,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .day{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:56px;padding:4px 2px;border-radius:12px;border:2px solid color-mix(in srgb,var(--c) 50%,transparent);background:color-mix(in srgb,var(--c) 20%,var(--surface))}
 .day .dn{font-family:var(--display);font-weight:800;font-size:1.1rem;font-variant-numeric:tabular-nums}
 .day .dd{font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.past{opacity:.62}
+.day[aria-pressed=true]{opacity:1}
+.wd{text-align:center;font-size:.75rem;font-weight:600;color:var(--muted);padding-bottom:2px}
+.day .mo{font-size:.62rem;line-height:1;min-height:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .day.today::after{content:"";position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--ink)}
 .day[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:1px}
 .note{font-size:.85rem;color:var(--muted);margin-top:10px}
@@ -170,6 +174,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
   .hero-icon{width:96px}
   .card{padding:16px}
   .day .dn{font-size:1rem}
+  .day .dd{font-size:.6rem}
 }
 @media (prefers-reduced-motion: no-preference){
   .day,.fc,.phase{transition:transform .12s}
@@ -521,13 +526,15 @@ details[open]>summary::after{transform:rotate(-135deg)}
   }
 
   function calHTML(cs,T,T0){
-    var out='',i,t,k;
-    for(i=1;i<=L;i++){
-      t=cs+i-1;k=stOf(i);
-      out+='<button class="day'+(t===T0?' today':'')+'" style="--c:var('+S[k].v+')" data-t="'+t+'" aria-pressed="'+(t===T)+'" aria-label="Tag '+i+', '+fmt(t,{weekday:'long',day:'numeric',month:'long'})+': '+S[k].name+'">'+
-        '<span class="dn">'+i+'</span><span class="dd">'+fmt(t,{day:'numeric',month:'numeric'})+'</span></button>';
+    var c0=info(T0).cs,end=Math.max(c0+L-1,T0+28),out='',i,t,inf,k,dom,lead=(c0+3)%7,wd=['Mo','Di','Mi','Do','Fr','Sa','So'];
+    for(i=0;i<7;i++)out+='<span class="wd">'+wd[i]+'</span>';
+    for(i=0;i<lead;i++)out+='<span></span>';
+    for(t=c0;t<=end;t++){
+      inf=info(t);k=stOf(inf.d);dom=new Date(t*864e5).getUTCDate();
+      out+='<button class="day'+(t===T0?' today':'')+(t<T0?' past':'')+'" style="--c:var('+S[k].v+')" data-t="'+t+'" aria-pressed="'+(t===T)+'" aria-label="'+fmt(t,{weekday:'long',day:'numeric',month:'long'})+', Zyklustag '+inf.d+': '+S[k].name+'">'+
+        '<span class="mo">'+(dom===1||t===c0?fmt(t,{month:'short'}):'')+'</span><span class="dn">'+dom+'</span><span class="dd">'+(inf.d===1?'Periode':'Tag '+inf.d)+'</span></button>';
     }
-    return '<p class="note" style="margin:0 0 12px">Jedes Feld ist ein Tag: oben der Zyklustag, darunter das Datum. Der schwarze Punkt markiert heute.</p><div class="cal">'+out+'</div>';
+    return '<p class="note" style="margin:0 0 12px">Jedes Feld zeigt das Datum, darunter den Zyklustag. „Periode“ markiert den Beginn eines Zyklus. Der Kalender reicht vier Wochen in die Zukunft und rechnet dafür mit gleich langen Zyklen. Der schwarze Punkt markiert heute.</p><div class="cal">'+out+'</div>';
   }
 
   function chartHTML(cs,d0){
