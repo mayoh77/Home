@@ -238,6 +238,46 @@ button{font:inherit;color:inherit;cursor:pointer}
     ]
   };
 
+  /* Was der Partner konkret tun kann, je Phase */
+  var PARTNER={
+    schon:[
+      ['Sag das','„Wie geht es dir heute? Was brauchst du?“ Dann zuhören und nicht gleich Lösungen anbieten.'],
+      ['Mach das','Alles Anstrengende übernehmen: Einkaufen, Kochen, Wäsche, Aufräumen. Sie soll liegen bleiben dürfen.'],
+      ['Organisiere','Schmerzmittel, Binden oder Tampons, Wärmflasche und Tee vorrätig halten, bevor sie fragen muss.'],
+      ['Überrasche','Ihr Lieblingsessen liefern lassen oder ein kleines Geschenk wie Schokolade oder Blumen, mit einem kurzen Zettel.']
+    ],
+    auf:[
+      ['Sag das','Sag ihr, was dir an ihr gefällt, und frag nach ihren Plänen für die Woche.'],
+      ['Mach das','Einen Ausflug oder gemeinsamen Sport aktiv vorschlagen und mit ihr planen, statt nur zuzustimmen.'],
+      ['Organisiere','Ein Wochenende oder einen Abend buchen, solange ihre Energie oben ist.'],
+      ['Überrasche','Ein spontanes Frühstück oder ein Besuch in einem neuen Café.']
+    ],
+    sonne:[
+      ['Sag das','Ehrliche Komplimente, konkret und ohne Hintergedanken.'],
+      ['Mach das','Volle Aufmerksamkeit schenken: Handy weg, zuhören, Blickkontakt.'],
+      ['Organisiere','Einen besonderen Abend: Tisch reservieren, Babysitter oder Kinokarten. Sie ist jetzt am geselligsten.'],
+      ['Überrasche','Eine Kleinigkeit, die zeigt, dass du zugehört hast, etwa ein Buch oder Konzertkarten.']
+    ],
+    ruhig:[
+      ['Sag das','Wertschätzung für den Alltag: „Danke, dass du dich um das Thema gekümmert hast.“'],
+      ['Mach das','Feste Rituale pflegen wie gemeinsames Abendessen oder Spaziergang und Aufgaben gerecht verteilen.'],
+      ['Organisiere','Die kommenden Wochen entzerren: Termine und Besuch so legen, dass die Tage vor der Periode frei sind.'],
+      ['Überrasche','Ein ruhiger Abend mit ihrem Lieblingsfilm und Snacks, bevor es turbulenter wird.']
+    ],
+    gew:[
+      ['Sag das','Milde Fragen statt Vorwürfe: „Ist gerade viel los? Kann ich dir etwas abnehmen?“ Keine Kommentare zu ihrer Laune.'],
+      ['Mach das','Kleinigkeiten erledigen, bevor sie ihr auffallen, und Streitthemen vertagen.'],
+      ['Organisiere','Stress von ihr fernhalten: Besuch absagen, Termine verschieben, Pflichten abfangen.'],
+      ['Überrasche','Ihre Lieblingssnacks und Tee im Haus haben und einfach hinstellen.']
+    ],
+    sturm:[
+      ['Sag das','„Ich bin für dich da und nehme das nicht persönlich.“ Bei Streit: „Lass uns das morgen in Ruhe besprechen.“'],
+      ['Mach das','Ruhig bleiben und nicht kontern. Bei Eskalation eine Pause vorschlagen und kurz rausgehen.'],
+      ['Organisiere','Alles Nötige bereit haben: Wärmflasche, Schokolade, Lieblingsessen, Tee und einen freien Abend für sie.'],
+      ['Überrasche','Ein handgeschriebener Zettel oder eine Umarmung ohne Erwartung, dazu ein Abend ohne Aufgaben für sie.']
+    ]
+  };
+
   var start=null,L=28,sel=null,example=false,SC=[];
 
   function todayN(){var n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())/864e5}
@@ -319,9 +359,12 @@ button{font:inherit;color:inherit;cursor:pointer}
         '<div class="gauge-l"><span>Sonne</span><span>Ausraster-Risiko: <b>'+riskLabel(sc)+'</b></span><span>Sturm</span></div></div>'+
       '</div>'+
       '<div class="plan">'+
-        '<div><h3>Dein Plan</h3><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><p class="what">'+s.what+'</p></div>'+
+        '<div><h3>Auf einen Blick</h3><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><p class="what">'+s.what+'</p></div>'+
         '<div class="dont"><b>Lieber nicht:</b> '+s.dont+'</div>'+
       '</div>'+
+      '<div class="boost"><h3>So hilfst du ihr</h3><div class="boost-grid">'+
+        PARTNER[k].map(function(b){return '<div class="tile"><b>'+b[0]+'</b><p>'+b[1]+'</p></div>'}).join('')+
+      '</div></div>'+
       '<div class="boost"><h3>Stimmung aufhellen</h3><div class="boost-grid">'+
         BOOST[k].map(function(b){return '<div class="tile"><b>'+b[0]+'</b><p>'+b[1]+'</p></div>'}).join('')+
       '</div></div>'+
@@ -414,7 +457,8 @@ button{font:inherit;color:inherit;cursor:pointer}
         return '<article class="phase'+(k===k0?' on':'')+'" style="--c:var('+s.v+')">'+
           '<header>'+icon(k)+'<div><h3>'+s.name+'</h3><div class="range">Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+' · '+s.phase+'</div></div></header>'+
           '<p>'+s.what+'</p>'+
-          '<h4>Dein Plan</h4><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+
+          '<h4>Auf einen Blick</h4><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+
+          '<h4>So hilfst du ihr</h4><ul>'+PARTNER[k].map(function(b){return '<li><b>'+b[0]+':</b> '+b[1]+'</li>'}).join('')+'</ul>'+
           '<h4>Stimmung aufhellen</h4><ul>'+BOOST[k].map(function(b){return '<li><b>'+b[0]+':</b> '+b[1]+'</li>'}).join('')+'</ul></article>';
       }).join('')+'</div></section>';
   }
