@@ -13,7 +13,7 @@
   --bg:#EDF0F7; --surface:#FFFFFF; --surface2:#F4F6FB; --ink:#1A2133; --muted:#586179; --line:#D9DFEB;
   --accent:#3447C9; --on-accent:#FFFFFF;
   --c-schon:#4C74D0; --c-auf:#5FA13C; --c-sonne:#1F9A57; --c-ruhig:#B8920F; --c-gew:#D96F16; --c-sturm:#CF3333;
-  --sun:#F2B01E; --cloud:#CBD5E8; --cloud-d:#6F7D9C; --bolt:#F2B01E; --rain:#4C74D0;
+  --sun:#F2B01E; --cloud:#CBD5E8; --cloud-d:#6F7D9C; --bolt:#F2B01E; --rain:#4C74D0; --lust:#C23B7A;
   --display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
   --body:'Hanken Grotesk','Segoe UI',system-ui,sans-serif;
 }
@@ -22,7 +22,7 @@
     --bg:#0E1320; --surface:#171E30; --surface2:#1E2639; --ink:#E9EDF6; --muted:#A0AAC2; --line:#2B3550;
     --accent:#8C9BFF; --on-accent:#0E1320;
     --c-schon:#7C9CF0; --c-auf:#8FCB6A; --c-sonne:#3CC078; --c-ruhig:#E2BD3F; --c-gew:#F09A4A; --c-sturm:#F26E6E;
-    --sun:#F7C948; --cloud:#4A5776; --cloud-d:#6B7AA0; --bolt:#F7C948; --rain:#7C9CF0;
+    --sun:#F7C948; --cloud:#4A5776; --cloud-d:#6B7AA0; --bolt:#F7C948; --rain:#7C9CF0; --lust:#F08AB8;
     color-scheme:dark;
   }
 }
@@ -30,7 +30,7 @@
   --bg:#0E1320; --surface:#171E30; --surface2:#1E2639; --ink:#E9EDF6; --muted:#A0AAC2; --line:#2B3550;
   --accent:#8C9BFF; --on-accent:#0E1320;
   --c-schon:#7C9CF0; --c-auf:#8FCB6A; --c-sonne:#3CC078; --c-ruhig:#E2BD3F; --c-gew:#F09A4A; --c-sturm:#F26E6E;
-  --sun:#F7C948; --cloud:#4A5776; --cloud-d:#6B7AA0; --bolt:#F7C948; --rain:#7C9CF0;
+  --sun:#F7C948; --cloud:#4A5776; --cloud-d:#6B7AA0; --bolt:#F7C948; --rain:#7C9CF0; --lust:#F08AB8;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -107,7 +107,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .chart svg{width:100%;height:auto;display:block}
 .chart text{fill:var(--muted);font-family:var(--body)}
 
-.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.phases{display:flex;flex-direction:column;gap:10px}
 .phase{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .phase.on{border:2px solid var(--c)}
 .phase header{display:flex;gap:12px;align-items:center}
@@ -124,6 +124,47 @@ button{font:inherit;color:inherit;cursor:pointer}
 .phase h4{margin:4px 0 0;font-family:var(--display);font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 .foot{font-size:.85rem;color:var(--muted);max-width:70ch}
 
+.switch{display:flex;align-items:center;gap:10px;min-height:44px;cursor:pointer;font-weight:600;font-size:.92rem}
+.switch input{width:20px;height:20px;margin:0;accent-color:var(--lust);flex:none}
+.opt{color:var(--muted);font-size:.8rem}
+.lust{grid-column:1/-1;border-top:1px solid color-mix(in srgb,var(--s) 35%,var(--line));padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.meter{background:var(--surface);border:1px solid color-mix(in srgb,var(--lust) 35%,var(--line));border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.mh{display:flex;justify-content:space-between;gap:8px;font-size:.92rem}
+.mh span{color:var(--lust);font-weight:600;filter:brightness(.95)}
+.segs{display:flex;gap:4px}
+.seg{flex:1;height:10px;border-radius:99px;background:var(--line)}
+.seg.on{background:var(--lust)}
+.lt{color:var(--muted);font-size:.95rem}
+.tipbox{background:color-mix(in srgb,var(--lust) 10%,var(--surface));border-radius:12px;padding:12px 14px;font-size:.95rem}
+.key{display:inline-block;width:26px;border-top:3px dashed var(--lust);vertical-align:middle;margin-right:6px}
+.hero{scroll-margin-top:76px}
+.navwrap{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:var(--bg);padding-block:6px}
+.seg-nav{display:flex;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:4px}
+.seg-nav button{flex:1;min-height:44px;padding:8px 10px;border:0;border-radius:10px;background:transparent;font-weight:600;color:var(--muted)}
+.seg-nav button[aria-selected=true]{background:var(--accent);color:var(--on-accent)}
+.htabs,.subtabs{display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid color-mix(in srgb,var(--s) 35%,var(--line));margin-bottom:14px}
+.subtabs{--s:var(--line)}
+.htabs button,.subtabs button{flex:none;min-height:44px;padding:8px 14px;border:0;border-bottom:3px solid transparent;background:none;font-weight:600;color:var(--muted);white-space:nowrap}
+.htabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--s)}
+.subtabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.hero-tabs{grid-column:1/-1;min-width:0}
+.stack{display:flex;flex-direction:column;gap:12px}
+summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;min-height:44px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";margin-left:auto;flex:none;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details[open]>summary::after{transform:rotate(-135deg)}
+.setup>summary{font-weight:600}
+.setup>summary .sum-v{color:var(--muted);font-weight:400;font-size:.88rem;font-variant-numeric:tabular-nums}
+.setup .controls{margin-top:16px}
+.lg-row{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem}
+.lg-row li{display:flex;align-items:center;gap:6px}
+.lg-row small{color:var(--muted);font-variant-numeric:tabular-nums}
+.phase.acc{display:block;padding:12px 16px}
+.acc>summary svg{width:48px;height:48px;flex:none}
+.acc>summary>div{min-width:0}
+.acc-body{display:flex;flex-direction:column;gap:8px;padding-top:12px}
+.now{font-family:var(--body);font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;background:color-mix(in srgb,var(--c) 22%,var(--surface));border:1px solid var(--c);border-radius:99px;padding:1px 8px;vertical-align:middle;margin-left:6px}
 @media (max-width:560px){
   .hero{grid-template-columns:1fr}
   .hero-icon{width:96px}
@@ -138,13 +179,15 @@ button{font:inherit;color:inherit;cursor:pointer}
 <style>html{-webkit-text-size-adjust:100%}body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
-<main class="wrap">
+<main class="wrap" id="root">
   <header>
     <h1>Zyklus-Wetter</h1>
     <p class="sub">Trag den ersten Tag der letzten Periode ein und sieh, ob bei deiner Frau gerade Sonnenschein, Gewitter oder Sturm herrscht.</p>
   </header>
 
-  <section class="card controls" aria-label="Eingaben">
+  <details class="card setup" id="setup">
+    <summary><span>Einstellungen</span><span class="sum-v" id="sumV"></span></summary>
+    <div class="controls">
     <div class="label-row">
       <label for="start">Erster Tag der letzten Periode</label>
       <input type="date" id="start">
@@ -153,8 +196,21 @@ button{font:inherit;color:inherit;cursor:pointer}
       <label for="len">Zykluslänge: <output id="lenOut" for="len">28 Tage</output></label>
       <input type="range" id="len" min="24" max="38" step="1" value="28">
     </div>
+    <div class="label-row">
+      <label class="switch" for="lust"><input type="checkbox" id="lust"><span>Lust auf Zweisamkeit anzeigen</span></label>
+      <span class="opt">Optional, standardmäßig aus</span>
+    </div>
     <p class="hint" id="hint"></p>
-  </section>
+    </div>
+  </details>
+
+  <div class="navwrap">
+    <nav class="seg-nav" role="tablist" aria-label="Ansicht">
+      <button role="tab" data-view="heute" aria-selected="true">Heute</button>
+      <button role="tab" data-view="zyklus" aria-selected="false">Zyklus</button>
+      <button role="tab" data-view="phasen" aria-selected="false">Phasen</button>
+    </nav>
+  </div>
 
   <div id="app" style="display:flex;flex-direction:column;gap:20px"></div>
 
@@ -278,7 +334,22 @@ button{font:inherit;color:inherit;cursor:pointer}
     ]
   };
 
-  var start=null,L=28,sel=null,example=false,SC=[];
+  var LUST_TXT={
+    schon:{text:'Der Körper braucht Ruhe. Kuscheln und Wärme sind meist willkommen. Sex hängt stark von den Beschwerden ab, manche Frauen haben in diesen Tagen sogar mehr Lust.',
+      tip:'Frag, was sich gut anfühlt, und nimm ein Nein ohne Nachfragen an. Massage oder Kuscheln auf dem Sofa sind eine gute Alternative.'},
+    auf:{text:'Mit steigendem Östrogen kommt die Lust zurück. Sie sucht mehr Nähe und flirtet wieder gern.',
+      tip:'Flirte, plane Zeit zu zweit und zeig Interesse, ohne Druck aufzubauen.'},
+    sonne:{text:'Der Höhepunkt der Lust. Viele Frauen haben jetzt am meisten Appetit auf Nähe, Berührung und Sex.',
+      tip:'Nimm dir Zeit für einen schönen Abend. Der Flirt beginnt schon tagsüber, und ihre Signale zählen.'},
+    ruhig:{text:'Die Lust geht langsam zurück. Nähe und Zärtlichkeit bleiben wichtig, die Lust auf Sex wird ruhiger.',
+      tip:'Gemütlichkeit statt Tempo: Massage, langes Kuscheln und Zeit lassen.'},
+    gew:{text:'Die Lust schwankt. Manche suchen jetzt Trost und Nähe, andere sind durch Spannungsgefühl in der Brust und Blähbauch berührungsempfindlich.',
+      tip:'Sanfte Berührungen anbieten und auf ihre Reaktion achten. Nähe ohne Erwartung.'},
+    sturm:{text:'Meist wenig Lust auf Sex, der Körper fühlt sich angespannt an. Zärtlichkeit im Sinne von Trost und Umarmung kann trotzdem guttun.',
+      tip:'Umarmen und da sein, ohne Erwartung. Ein Nein heißt nicht, dass sie dich nicht mag.'}
+  };
+
+  var start=null,L=28,sel=null,example=false,SC=[],LU=[],lust=false,view='heute',htab='help',zsub='cal';
 
   function todayN(){var n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())/864e5}
   function fmt(n,o){return new Date(n*864e5).toLocaleDateString('de-DE',Object.assign({timeZone:'UTC'},o))}
@@ -306,6 +377,38 @@ button{font:inherit;color:inherit;cursor:pointer}
       out[d]=0.25*raw[p]+0.5*raw[d]+0.25*raw[n];
     }
     return out;
+  }
+  /* Tendenz pro Phase (0 bis 10): Zärtlichkeit, Zeit zu zweit, Sex; jeweils Anfang und Ende der Phase */
+  var LUSTV={schon:[[6,6],[4,4],[3,4]],auf:[[6,7],[6,8],[5,8]],sonne:[[9,9],[9,9],[9,9]],ruhig:[[7,6],[7,5],[6,4]],gew:[[6,5],[4,4],[4,4]],sturm:[[5,5],[3,3],[3,2]]};
+  function buildLust(){
+    var groups={},raw=[],out=[],d,s,arr,i,t;
+    for(d=1;d<=L;d++){s=stOf(d);(groups[s]=groups[s]||[]).push(d)}
+    for(d=1;d<=L;d++){
+      s=stOf(d);arr=groups[s];i=arr.indexOf(d);t=arr.length>1?i/(arr.length-1):0.5;
+      raw[d]=LUSTV[s].map(function(r){return r[0]+(r[1]-r[0])*t});
+    }
+    for(d=1;d<=L;d++){
+      var p=d===1?L:d-1,n=d===L?1:d+1;
+      out[d]=[0,1,2].map(function(m){return 0.25*raw[p][m]+0.5*raw[d][m]+0.25*raw[n][m]});
+    }
+    return out;
+  }
+  function word(v){return v<=2?'kaum':v<=4?'wenig':v<=6?'mittel':v<=8?'hoch':'sehr hoch'}
+  function segs(v){
+    var n=Math.max(0,Math.min(5,Math.round(v/2))),o='',i;
+    for(i=0;i<5;i++)o+='<span class="seg'+(i<n?' on':'')+'"></span>';
+    return '<span class="segs" aria-hidden="true">'+o+'</span>';
+  }
+  function meterRow(label,v){return '<div class="meter"><div class="mh"><b>'+label+'</b><span>'+word(v)+'</span></div>'+segs(v)+'</div>'}
+  function lustHTML(k,d){
+    var v=LU[d],t=LUST_TXT[k];
+    return '<div class="stack"><div class="meters">'+meterRow('Zärtlichkeit',v[0])+meterRow('Zeit zu zweit',v[1])+meterRow('Sex',v[2])+'</div>'+
+      '<p class="lt">'+t.text+'</p><p class="tipbox"><b>Tipp:</b> '+t.tip+'</p>'+
+      '<p class="note">Das ist nur eine Tendenz, jede Frau ist anders. Entscheidend ist immer, was sie an dem Tag will. Ein Nein gilt in jeder Phase.</p></div>';
+  }
+  function phaseLust(k){
+    var m=LUSTV[k].map(function(r){return (r[0]+r[1])/2});
+    return '<h4>Lust auf Zweisamkeit</h4><p>Zärtlichkeit: <b>'+word(m[0])+'</b> · Zeit zu zweit: <b>'+word(m[1])+'</b> · Sex: <b>'+word(m[2])+'</b>. '+LUST_TXT[k].text+'</p>';
   }
   function riskLabel(sc){return sc>=85?'kaum vorhanden':sc>=70?'niedrig':sc>=55?'mäßig':sc>=40?'erhöht':sc>=25?'hoch':'extrem'}
 
@@ -346,9 +449,14 @@ button{font:inherit;color:inherit;cursor:pointer}
   function rel(i){return i===0?'heute':i===1?'morgen':'in '+i+' Tagen'}
   function nextWhere(T0,pred){for(var i=0;i<=L*2;i++){if(pred(info(T0+i).d))return i}return null}
 
+  function tiles(arr){return '<div class="boost-grid">'+arr.map(function(b){return '<div class="tile"><b>'+b[0]+'</b><p>'+b[1]+'</p></div>'}).join('')+'</div>'}
   function heroHTML(T0,T){
     var f=info(T),d=f.d,k=stOf(d),s=S[k],sc=SC[d],pos=Math.max(0,Math.min(100,100-sc)),prev=T!==T0;
-    return '<section class="card hero" style="--s:var('+s.v+')" aria-live="polite">'+
+    var tabs=[['help','So hilfst du ihr'],['boost','Stimmung heben']];
+    if(lust)tabs.push(['lust','Lust &amp; Nähe']);
+    tabs.push(['what','Hintergrund']);
+    var panel=htab==='boost'?tiles(BOOST[k]):htab==='lust'?lustHTML(k,d):htab==='what'?'<p class="lt">'+s.what+'</p>':tiles(PARTNER[k]);
+    return '<section class="card hero" style="--s:var('+s.v+')">'+
       '<div class="hero-icon">'+icon(k)+'</div>'+
       '<div class="hero-body">'+
         '<p class="eyebrow">'+(prev?'Vorschau für ':'Heute, ')+fmt(T,{weekday:'long',day:'numeric',month:'long'})+(prev?' · <button class="link" data-t="'+T0+'">Zurück zu heute</button>':'')+'</p>'+
@@ -359,15 +467,12 @@ button{font:inherit;color:inherit;cursor:pointer}
         '<div class="gauge-l"><span>Sonne</span><span>Ausraster-Risiko: <b>'+riskLabel(sc)+'</b></span><span>Sturm</span></div></div>'+
       '</div>'+
       '<div class="plan">'+
-        '<div><h3>Auf einen Blick</h3><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><p class="what">'+s.what+'</p></div>'+
+        '<div><h3>Auf einen Blick</h3><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></div>'+
         '<div class="dont"><b>Lieber nicht:</b> '+s.dont+'</div>'+
       '</div>'+
-      '<div class="boost"><h3>So hilfst du ihr</h3><div class="boost-grid">'+
-        PARTNER[k].map(function(b){return '<div class="tile"><b>'+b[0]+'</b><p>'+b[1]+'</p></div>'}).join('')+
-      '</div></div>'+
-      '<div class="boost"><h3>Stimmung aufhellen</h3><div class="boost-grid">'+
-        BOOST[k].map(function(b){return '<div class="tile"><b>'+b[0]+'</b><p>'+b[1]+'</p></div>'}).join('')+
-      '</div></div>'+
+      '<div class="hero-tabs"><div class="htabs" role="tablist">'+
+        tabs.map(function(t){return '<button role="tab" data-htab="'+t[0]+'" aria-selected="'+(htab===t[0])+'">'+t[1]+'</button>'}).join('')+
+      '</div><div role="tabpanel" aria-live="polite">'+panel+'</div></div>'+
     '</section>';
   }
 
@@ -390,7 +495,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     for(i=0;i<7;i++){
       t=T0+i;k=stOf(info(t).d);s=S[k];
       out+='<button class="fc" style="--c:var('+s.v+')" data-t="'+t+'" aria-pressed="'+(t===T)+'" aria-label="'+fmt(t,{weekday:'long',day:'numeric',month:'long'})+': '+s.name+'">'+
-        '<span class="w">'+(i===0?'Heute':fmt(t,{weekday:'short'}))+'</span><span class="dt">'+fmt(t,{day:'numeric',month:'numeric'})+'.</span>'+icon(k)+'<span class="n">'+s.name+'</span></button>';
+        '<span class="w">'+(i===0?'Heute':fmt(t,{weekday:'short'}))+'</span><span class="dt">'+fmt(t,{day:'numeric',month:'numeric'})+'</span>'+icon(k)+'<span class="n">'+s.name+'</span></button>';
     }
     return '<section class="card"><div class="section-head"><h2>Die nächsten 7 Tage</h2><p>Tippe auf einen Tag, um die Prognose oben zu sehen.</p></div><div class="fc-row">'+out+'</div></section>';
   }
@@ -407,12 +512,12 @@ button{font:inherit;color:inherit;cursor:pointer}
       var days=[],dd;for(dd=1;dd<=L;dd++){if(stOf(dd)===k)days.push(dd)}
       return '<li><span class="dot" style="--c:var('+S[k].v+')"></span><span><b>'+S[k].name+'</b> <small>Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+'</small></span></li>';
     }).join('');
-    return '<section class="card"><div class="section-head"><h2>Das Zyklusrad</h2><p>Oben beginnt Tag 1, dann geht es im Uhrzeigersinn rund. Der Ring markiert den gewählten Tag.</p></div>'+
+    return '<p class="note" style="margin:0 0 12px">Oben beginnt Tag 1, dann geht es im Uhrzeigersinn rund. Der Ring markiert den gewählten Tag.</p>'+
       '<div class="wheel-wrap"><div class="wheel"><svg viewBox="0 0 300 300" role="img" aria-label="Zyklusrad, gewählter Tag '+d0+' von '+L+'">'+segs+marker+
       '<text x="150" y="146" text-anchor="middle" font-family="Bricolage Grotesque, Segoe UI, sans-serif" font-weight="800" font-size="64" style="fill:var(--ink)">'+d0+'</text>'+
       '<text x="150" y="172" text-anchor="middle" font-size="15" style="fill:var(--muted)">von '+L+' Tagen</text>'+
-      '<text x="150" y="196" text-anchor="middle" font-size="15" style="fill:var(--muted)">'+fmt(T,{day:'numeric',month:'numeric'})+'.</text>'+
-      '</svg></div><ul class="legend">'+legend+'</ul></div></section>';
+      '<text x="150" y="196" text-anchor="middle" font-size="15" style="fill:var(--muted)">'+fmt(T,{day:'numeric',month:'numeric'})+'</text>'+
+      '</svg></div></div>';
   }
 
   function calHTML(cs,T,T0){
@@ -420,9 +525,9 @@ button{font:inherit;color:inherit;cursor:pointer}
     for(i=1;i<=L;i++){
       t=cs+i-1;k=stOf(i);
       out+='<button class="day'+(t===T0?' today':'')+'" style="--c:var('+S[k].v+')" data-t="'+t+'" aria-pressed="'+(t===T)+'" aria-label="Tag '+i+', '+fmt(t,{weekday:'long',day:'numeric',month:'long'})+': '+S[k].name+'">'+
-        '<span class="dn">'+i+'</span><span class="dd">'+fmt(t,{day:'numeric',month:'numeric'})+'.</span></button>';
+        '<span class="dn">'+i+'</span><span class="dd">'+fmt(t,{day:'numeric',month:'numeric'})+'</span></button>';
     }
-    return '<section class="card"><div class="section-head"><h2>Der ganze Zyklus</h2><p>Jedes Feld ist ein Tag: oben der Zyklustag, darunter das Datum. Der schwarze Punkt markiert heute.</p></div><div class="cal">'+out+'</div></section>';
+    return '<p class="note" style="margin:0 0 12px">Jedes Feld ist ein Tag: oben der Zyklustag, darunter das Datum. Der schwarze Punkt markiert heute.</p><div class="cal">'+out+'</div>';
   }
 
   function chartHTML(cs,d0){
@@ -444,44 +549,72 @@ button{font:inherit;color:inherit;cursor:pointer}
     var ticks=[1,7,14,21,L].filter(function(v,i,a){return a.indexOf(v)===i&&v<=L&&(v===L||L-v>=3)}).map(function(v){
       return '<text x="'+X(v).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="16">Tag '+v+'</text>';
     }).join('');
-    return '<section class="card chart"><div class="section-head"><h2>Stimmungskurve</h2><p>Je höher die Kurve, desto entspannter die Lage. Punkte sind antippbar.</p></div>'+
+    var lustLine='',lg='';
+    if(lust){
+      var lp=[];for(d=1;d<=L;d++)lp.push(X(d).toFixed(1)+','+Y(LU[d][2]*10).toFixed(1));
+      lustLine='<polyline points="'+lp.join(' ')+'" fill="none" stroke="var(--lust)" stroke-width="3" stroke-dasharray="7 5" stroke-linejoin="round"/>';
+      lg='<p class="note"><span class="key"></span>Gestrichelt: Lust auf Sex (oben = viel Lust)</p>';
+    }
+    return '<div class="chart"><p class="note" style="margin:0 0 8px">Je höher die Kurve, desto entspannter die Lage. Punkte sind antippbar.</p>'+
       '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Stimmungskurve über '+L+' Zyklustage">'+bg+
       '<line x1="'+X(d0).toFixed(1)+'" x2="'+X(d0).toFixed(1)+'" y1="'+pt+'" y2="'+(pt+h)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="4 4"/>'+
-      '<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>'+dots+ticks+'</svg></section>';
+      '<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>'+lustLine+dots+ticks+'</svg>'+lg+'</div>';
   }
 
+  function lgRow(){
+    return '<ul class="lg-row">'+ORDER.map(function(k){
+      var days=[],d;for(d=1;d<=L;d++){if(stOf(d)===k)days.push(d)}
+      return '<li><span class="dot" style="--c:var('+S[k].v+')"></span><span>'+S[k].name+' <small>'+days[0]+(days.length>1?'–'+days[days.length-1]:'')+'</small></span></li>';
+    }).join('')+'</ul>';
+  }
+  function zyklusHTML(f,T,T0){
+    var subs=[['cal','Kalender'],['wheel','Rad'],['chart','Kurve']];
+    var body=zsub==='wheel'?wheelHTML(f.cs,T,f.d):zsub==='chart'?chartHTML(f.cs,f.d):calHTML(f.cs,T,T0);
+    return '<section class="card"><div class="subtabs" role="tablist">'+
+      subs.map(function(b){return '<button role="tab" data-zsub="'+b[0]+'" aria-selected="'+(zsub===b[0])+'">'+b[1]+'</button>'}).join('')+
+      '</div>'+lgRow()+body+'</section>';
+  }
   function phasesHTML(k0){
-    return '<section><div class="section-head"><h2>Die Phasen im Detail</h2><p>Was in ihrem Körper passiert und wie du gut durch die Zeit kommst.</p></div><div class="phases">'+
+    return '<section><div class="section-head"><h2>Die Phasen</h2><p>Tippe eine Phase an, um alle Details zu sehen. Die aktuelle ist schon geöffnet.</p></div><div class="phases">'+
       ORDER.map(function(k){
         var s=S[k],days=[],d;for(d=1;d<=L;d++){if(stOf(d)===k)days.push(d)}
-        return '<article class="phase'+(k===k0?' on':'')+'" style="--c:var('+s.v+')">'+
-          '<header>'+icon(k)+'<div><h3>'+s.name+'</h3><div class="range">Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+' · '+s.phase+'</div></div></header>'+
-          '<p>'+s.what+'</p>'+
+        return '<details class="phase acc'+(k===k0?' on':'')+'" style="--c:var('+s.v+')"'+(k===k0?' open':'')+'>'+
+          '<summary>'+icon(k)+'<div><h3>'+s.name+(k===k0?' <span class="now">jetzt</span>':'')+'</h3><div class="range">Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+' · '+s.phase+'</div></div></summary>'+
+          '<div class="acc-body"><p>'+s.what+'</p>'+
           '<h4>Auf einen Blick</h4><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+
+          (lust?phaseLust(k):'')+
           '<h4>So hilfst du ihr</h4><ul>'+PARTNER[k].map(function(b){return '<li><b>'+b[0]+':</b> '+b[1]+'</li>'}).join('')+'</ul>'+
-          '<h4>Stimmung aufhellen</h4><ul>'+BOOST[k].map(function(b){return '<li><b>'+b[0]+':</b> '+b[1]+'</li>'}).join('')+'</ul></article>';
+          '<h4>Stimmung aufhellen</h4><ul>'+BOOST[k].map(function(b){return '<li><b>'+b[0]+':</b> '+b[1]+'</li>'}).join('')+'</ul></div></details>';
       }).join('')+'</div></section>';
   }
 
   function render(){
-    var T0=todayN(),T=sel==null?T0:sel,f=info(T),k=stOf(f.d);
-    SC=buildScores();
-    document.getElementById('app').innerHTML=
-      heroHTML(T0,T)+factsHTML(T0)+forecastHTML(T0,T)+wheelHTML(f.cs,T,f.d)+calHTML(f.cs,T,T0)+chartHTML(f.cs,f.d)+phasesHTML(k);
+    var T0=todayN(),T=sel==null?T0:sel,f=info(T),k=stOf(f.d),html,i;
+    SC=buildScores();LU=buildLust();
+    if(htab==='lust'&&!lust)htab='help';
+    if(view==='zyklus')html=zyklusHTML(f,T,T0);
+    else if(view==='phasen')html=phasesHTML(k);
+    else html=heroHTML(T0,T)+factsHTML(T0)+forecastHTML(T0,T);
+    document.getElementById('app').innerHTML=html;
+    var bs=document.querySelectorAll('[data-view]');
+    for(i=0;i<bs.length;i++)bs[i].setAttribute('aria-selected',String(bs[i].getAttribute('data-view')===view));
+    document.getElementById('sumV').textContent='Start '+fmt(start,{day:'numeric',month:'numeric'})+' · '+L+' Tage'+(lust?' · Lust an':'');
     document.getElementById('hint').textContent=example
       ?'Das ist ein Beispieldatum. Trag oben den echten ersten Tag der letzten Periode ein.'
       :'Die Prognose passt sich sofort an. Deine Eingabe bleibt in diesem Browser gespeichert.';
   }
-  function save(){try{localStorage.setItem(KEY,JSON.stringify({start:start,len:L}))}catch(e){}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({start:start,len:L,lust:lust}))}catch(e){}}
 
   try{
     var st=JSON.parse(localStorage.getItem(KEY)||'null');
-    if(st&&typeof st.start==='number'&&typeof st.len==='number'&&st.len>=24&&st.len<=38){start=st.start;L=st.len}
+    if(st&&typeof st.start==='number'&&typeof st.len==='number'&&st.len>=24&&st.len<=38){start=st.start;L=st.len;lust=st.lust===true}
   }catch(e){}
   if(start==null){start=todayN()-11;example=true}
 
   var startEl=document.getElementById('start'),lenEl=document.getElementById('len'),lenOut=document.getElementById('lenOut');
   startEl.value=iso(start);lenEl.value=L;lenOut.textContent=L+' Tage';
+  var lustEl=document.getElementById('lust');lustEl.checked=lust;
+  document.getElementById('setup').open=example;
 
   startEl.addEventListener('change',function(){
     var v=startEl.value;if(!v)return;
@@ -491,9 +624,18 @@ button{font:inherit;color:inherit;cursor:pointer}
   lenEl.addEventListener('input',function(){
     L=+lenEl.value;lenOut.textContent=L+' Tage';sel=null;save();render();
   });
-  document.getElementById('app').addEventListener('click',function(e){
-    var el=e.target.closest('[data-t]');if(!el)return;
-    sel=Number(el.getAttribute('data-t'));render();
+  lustEl.addEventListener('change',function(){lust=lustEl.checked;save();render()});
+  function scrollToApp(){
+    var app=document.getElementById('app'),nav=document.querySelector('.navwrap');
+    var y=app.getBoundingClientRect().top+window.scrollY-(nav?nav.offsetHeight:0)-8;
+    if(window.scrollY>y)window.scrollTo({top:Math.max(0,y),behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  }
+  document.getElementById('root').addEventListener('click',function(e){
+    var el=e.target.closest('[data-view],[data-htab],[data-zsub],[data-t]');if(!el)return;
+    if(el.hasAttribute('data-view')){view=el.getAttribute('data-view');render();scrollToApp();return}
+    if(el.hasAttribute('data-htab')){htab=el.getAttribute('data-htab');render();return}
+    if(el.hasAttribute('data-zsub')){zsub=el.getAttribute('data-zsub');render();return}
+    sel=Number(el.getAttribute('data-t'));view='heute';render();
     var h=document.querySelector('.hero');
     if(h){h.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
   });
