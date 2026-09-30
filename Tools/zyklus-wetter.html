@@ -116,6 +116,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .phase .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c);filter:brightness(.9)}
 .phase p{font-size:.93rem}
 .phase ul{margin:0;padding-left:1.1em;font-size:.93rem;display:flex;flex-direction:column;gap:3px}
+.boost{grid-column:1/-1;border-top:1px solid color-mix(in srgb,var(--s) 35%,var(--line));padding-top:16px;display:flex;flex-direction:column;gap:12px}
+.boost-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid color-mix(in srgb,var(--s) 35%,var(--line));border-radius:12px;padding:12px 14px;min-width:0}
+.tile b{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.tile p{font-size:.93rem}
+.phase h4{margin:4px 0 0;font-family:var(--display);font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
 .foot{font-size:.85rem;color:var(--muted);max-width:70ch}
 
 @media (max-width:560px){
@@ -152,7 +158,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
   <div id="app" style="display:flex;flex-direction:column;gap:20px"></div>
 
-  <p class="foot">Die Vorhersage ist ein Durchschnittsmodell. Jeder Körper tickt anders, Stress, Schlaf und Pille können alles verschieben. Nimm das Wetter als Hinweis und frag im Zweifel nach. Das ist Hormonbiologie und kein Charakterfehler.</p>
+  <p class="foot">Die Vorhersage ist ein Durchschnittsmodell. Jeder Körper tickt anders, Stress, Schlaf und Pille können alles verschieben. Nimm das Wetter als Hinweis und frag im Zweifel nach. Das ist Hormonbiologie und kein Charakterfehler. Bei sehr starken Schmerzen oder heftigen Stimmungseinbrüchen vor der Periode lohnt sich ein Besuch bei der Frauenärztin oder beim Frauenarzt.</p>
 </main>
 
 <script>
@@ -191,6 +197,46 @@ button{font:inherit;color:inherit;cursor:pointer}
       dont:'Fragen, ob sie ihre Tage hat. Das eskaliert garantiert.'}
   };
   var ORDER=['schon','auf','sonne','ruhig','gew','sturm'];
+
+  /* Vorschläge zum Aufhellen der Stimmung, je Phase */
+  var BOOST={
+    schon:[
+      ['Wärme','Wärmflasche oder Körnerkissen auf Bauch und unteren Rücken, dazu Ingwer- oder Kamillentee. Wärme löst Krämpfe spürbar.'],
+      ['Essen & Trinken','Eisenreich kochen: Linsensuppe, Spinat, Hülsenfrüchte oder Rindfleisch. Dazu ein Stück dunkle Schokolade.'],
+      ['Bewegung','Nur sanft: ein kurzer Spaziergang oder ruhiges Dehnen. Leichte Bewegung lindert Schmerzen, Zwang bringt nichts.'],
+      ['Kleine Geste','Eine Rückenmassage anbieten, ohne dass etwas erwartet wird. Und danach den Abwasch übernehmen.']
+    ],
+    auf:[
+      ['Bewegung','Gemeinsam raus: Radtour, Wanderung oder Laufen. Sie hat jetzt Energie und Lust auf Schwung.'],
+      ['Neues','Etwas ausprobieren, das ihr noch nie gemacht habt, etwa ein Kurs, ein neues Lokal oder ein Ausflugsziel.'],
+      ['Zusammen','Zukunftspläne besprechen, Urlaub buchen oder die Wohnung umgestalten. Jetzt packt sie gern an.'],
+      ['Tageslicht','Gemeinsam Licht tanken, das hebt die Stimmung. Frühstück draußen oder eine Runde am Wochenendmorgen.']
+    ],
+    sonne:[
+      ['Zusammen','Date-Abend mit Tanzen, Konzert oder Freunden treffen. Sie ist jetzt am kontaktfreudigsten.'],
+      ['Kleine Geste','Ehrliche Komplimente und echte Aufmerksamkeit. Gerade jetzt kommen sie an.'],
+      ['Bewegung','Sportliche Aktivitäten zu zweit, etwa Klettern, Schwimmen oder Tanzkurs. Die Leistungsfähigkeit ist am höchsten.'],
+      ['Nähe','Zeit für Zweisamkeit einplanen. Viele Frauen haben jetzt mehr Lust auf Nähe, dränge aber nicht.']
+    ],
+    ruhig:[
+      ['Essen & Trinken','Gemeinsam kochen mit komplexen Kohlenhydraten wie Vollkornpasta, Kartoffeln und Haferflocken. Das hält den Blutzucker und die Laune stabil.'],
+      ['Ruhe','Feste Routinen und genug Schlaf. Jetzt lieber früh ins Bett, bevor sich die Energie weiter senkt.'],
+      ['Zusammen','Offene Themen ansprechen und klären, solange sie gelassen ist. Die nächste Phase wird kantiger.'],
+      ['Bewegung','Ein regelmäßiger Spaziergang nach dem Abendessen. Ausdauerbewegung beugt Stimmungstiefs vor.']
+    ],
+    gew:[
+      ['Essen & Trinken','Magnesium und Ballaststoffe: Nüsse, Haferflocken, Bananen, Gemüse. Weniger Koffein, Salz und Alkohol, das mildert Blähbauch und Nervosität.'],
+      ['Bewegung','Moderater Ausdauersport wie zügiges Gehen, Radfahren oder Schwimmen. Das ist einer der besten Stimmungsaufheller bei PMS.'],
+      ['Ruhe','Den Kalender entschlacken: Besuch, Termine und Erledigungen nach Möglichkeit verschieben.'],
+      ['Kleine Geste','Unaufgefordert Aufgaben übernehmen, etwa Einkauf oder Müll. Jede Sache weniger im Kopf beruhigt.']
+    ],
+    sturm:[
+      ['Essen & Trinken','Lieblingsessen oder warme Suppe, dazu Nüsse oder dunkle Schokolade. Wenig Koffein, Salz und Alkohol.'],
+      ['Bewegung','Ein ruhiger Spaziergang an der frischen Luft. Als Angebot, nicht als Pflicht.'],
+      ['Ruhe','Früh ins Bett, Handy weg, Wärmflasche auf den Bauch. Schlafmangel verschärft jede Gereiztheit.'],
+      ['Kleine Geste','Eine kurze Nachricht: „Ich bin da, sag mir, was du brauchst.“ Dazu eine Serie nach ihrer Wahl, ohne Diskussion.']
+    ]
+  };
 
   var start=null,L=28,sel=null,example=false,SC=[];
 
@@ -276,6 +322,9 @@ button{font:inherit;color:inherit;cursor:pointer}
         '<div><h3>Dein Plan</h3><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><p class="what">'+s.what+'</p></div>'+
         '<div class="dont"><b>Lieber nicht:</b> '+s.dont+'</div>'+
       '</div>'+
+      '<div class="boost"><h3>Stimmung aufhellen</h3><div class="boost-grid">'+
+        BOOST[k].map(function(b){return '<div class="tile"><b>'+b[0]+'</b><p>'+b[1]+'</p></div>'}).join('')+
+      '</div></div>'+
     '</section>';
   }
 
@@ -364,7 +413,9 @@ button{font:inherit;color:inherit;cursor:pointer}
         var s=S[k],days=[],d;for(d=1;d<=L;d++){if(stOf(d)===k)days.push(d)}
         return '<article class="phase'+(k===k0?' on':'')+'" style="--c:var('+s.v+')">'+
           '<header>'+icon(k)+'<div><h3>'+s.name+'</h3><div class="range">Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+' · '+s.phase+'</div></div></header>'+
-          '<p>'+s.what+'</p><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></article>';
+          '<p>'+s.what+'</p>'+
+          '<h4>Dein Plan</h4><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>'+
+          '<h4>Stimmung aufhellen</h4><ul>'+BOOST[k].map(function(b){return '<li><b>'+b[0]+':</b> '+b[1]+'</li>'}).join('')+'</ul></article>';
       }).join('')+'</div></section>';
   }
 
