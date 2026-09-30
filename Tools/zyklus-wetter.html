@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zyklus-Wetter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<style>
+/* Layout: ein Wetterbericht. Eingabe oben, Tagesprognose als Hauptkarte, darunter Vorschau, Zyklusrad, Kalender, Verlaufskurve und Phasen. */
+:root{
+  --bg:#EDF0F7; --surface:#FFFFFF; --surface2:#F4F6FB; --ink:#1A2133; --muted:#586179; --line:#D9DFEB;
+  --accent:#3447C9; --on-accent:#FFFFFF;
+  --c-schon:#4C74D0; --c-auf:#5FA13C; --c-sonne:#1F9A57; --c-ruhig:#B8920F; --c-gew:#D96F16; --c-sturm:#CF3333;
+  --sun:#F2B01E; --cloud:#CBD5E8; --cloud-d:#6F7D9C; --bolt:#F2B01E; --rain:#4C74D0;
+  --display:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --body:'Hanken Grotesk','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1320; --surface:#171E30; --surface2:#1E2639; --ink:#E9EDF6; --muted:#A0AAC2; --line:#2B3550;
+    --accent:#8C9BFF; --on-accent:#0E1320;
+    --c-schon:#7C9CF0; --c-auf:#8FCB6A; --c-sonne:#3CC078; --c-ruhig:#E2BD3F; --c-gew:#F09A4A; --c-sturm:#F26E6E;
+    --sun:#F7C948; --cloud:#4A5776; --cloud-d:#6B7AA0; --bolt:#F7C948; --rain:#7C9CF0;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1320; --surface:#171E30; --surface2:#1E2639; --ink:#E9EDF6; --muted:#A0AAC2; --line:#2B3550;
+  --accent:#8C9BFF; --on-accent:#0E1320;
+  --c-schon:#7C9CF0; --c-auf:#8FCB6A; --c-sonne:#3CC078; --c-ruhig:#E2BD3F; --c-gew:#F09A4A; --c-sturm:#F26E6E;
+  --sun:#F7C948; --cloud:#4A5776; --cloud-d:#6B7AA0; --bolt:#F7C948; --rain:#7C9CF0;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;padding-inline:16px;padding-block:24px 56px}
+.wrap{max-width:880px;margin-inline:auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.1}
+h1{font-size:clamp(2rem,7vw,3rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.5rem;font-weight:800;letter-spacing:-.01em}
+h3{font-size:1.05rem;font-weight:600}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.sub{color:var(--muted);margin-top:8px;max-width:60ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.label-row{display:flex;flex-direction:column;gap:6px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;align-items:end}
+.controls label{font-weight:600;font-size:.92rem}
+.controls input[type=date]{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);width:100%;min-height:44px}
+.controls input[type=range]{width:100%;accent-color:var(--accent);min-height:44px}
+.controls output{font-variant-numeric:tabular-nums;font-weight:600}
+.hint{grid-column:1/-1;font-size:.88rem;color:var(--muted)}
+
+.hero{--s:var(--c-sonne);background:color-mix(in srgb,var(--s) 11%,var(--surface));border-color:color-mix(in srgb,var(--s) 50%,var(--line));display:grid;grid-template-columns:auto 1fr;gap:20px 24px;align-items:center}
+.hero-icon{width:132px}
+.hero-icon svg{width:100%;height:auto;display:block}
+.hero-body{display:flex;flex-direction:column;gap:10px;min-width:0}
+.hero h2{font-size:clamp(1.9rem,6vw,2.6rem);color:var(--s);filter:brightness(.92)}
+.lead{font-size:1.1rem;font-weight:500}
+.meta{color:var(--muted);font-size:.92rem;font-variant-numeric:tabular-nums}
+.link{background:none;border:0;padding:0;color:var(--accent);text-decoration:underline;font-size:inherit;text-transform:none;letter-spacing:0;font-weight:600}
+.gauge{position:relative;height:14px;border-radius:99px;background:linear-gradient(90deg,var(--c-sonne),var(--c-ruhig) 40%,var(--c-gew) 70%,var(--c-sturm));margin-top:6px}
+.pin{position:absolute;top:-5px;width:6px;height:24px;border-radius:4px;background:var(--ink);border:2px solid var(--surface);transform:translateX(-50%)}
+.gauge-l{display:flex;justify-content:space-between;gap:8px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+.gauge-l b{color:var(--ink)}
+.plan{grid-column:1/-1;border-top:1px solid color-mix(in srgb,var(--s) 35%,var(--line));padding-top:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.plan ul{margin:8px 0 0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px}
+.plan .what{color:var(--muted);font-size:.95rem;margin-top:6px}
+.dont{background:color-mix(in srgb,var(--c-sturm) 10%,var(--surface));border-radius:12px;padding:12px 14px;font-size:.95rem}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.fact .k{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted);font-weight:600}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex:none}
+.fact .v{font-family:var(--display);font-size:1.25rem;font-weight:600}
+.fact .d{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.section-head{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.section-head p{color:var(--muted);font-size:.95rem}
+.fc-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.fc{flex:1 0 76px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 6px;border-radius:14px;border:2px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 14%,var(--surface));text-align:center}
+.fc svg{width:44px;height:44px}
+.fc .w{font-weight:600;font-size:.85rem}
+.fc .dt{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.fc .n{font-size:.72rem;line-height:1.2;color:var(--ink)}
+.fc[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:1px}
+
+.wheel-wrap{display:flex;flex-wrap:wrap;gap:20px 32px;align-items:center;justify-content:center}
+.wheel{width:min(100%,300px);flex:0 1 300px}
+.wheel svg{width:100%;height:auto;display:block}
+.legend{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;flex:1 1 220px;min-width:0}
+.legend li{display:flex;gap:10px;align-items:baseline}
+.legend .dot{transform:translateY(1px)}
+.legend small{color:var(--muted);font-variant-numeric:tabular-nums}
+
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.day{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;min-height:56px;padding:4px 2px;border-radius:12px;border:2px solid color-mix(in srgb,var(--c) 50%,transparent);background:color-mix(in srgb,var(--c) 20%,var(--surface))}
+.day .dn{font-family:var(--display);font-weight:800;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.day .dd{font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.today::after{content:"";position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.day[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:1px}
+.note{font-size:.85rem;color:var(--muted);margin-top:10px}
+
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--body)}
+
+.phases{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.phase.on{border:2px solid var(--c)}
+.phase header{display:flex;gap:12px;align-items:center}
+.phase header svg{width:52px;height:52px;flex:none}
+.phase .range{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.phase .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--c);filter:brightness(.9)}
+.phase p{font-size:.93rem}
+.phase ul{margin:0;padding-left:1.1em;font-size:.93rem;display:flex;flex-direction:column;gap:3px}
+.foot{font-size:.85rem;color:var(--muted);max-width:70ch}
+
+@media (max-width:560px){
+  .hero{grid-template-columns:1fr}
+  .hero-icon{width:96px}
+  .card{padding:16px}
+  .day .dn{font-size:1rem}
+}
+@media (prefers-reduced-motion: no-preference){
+  .day,.fc,.phase{transition:transform .12s}
+  .day:hover,.fc:hover{transform:translateY(-2px)}
+}
+</style>
+<style>html{-webkit-text-size-adjust:100%}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Zyklus-Wetter</h1>
+    <p class="sub">Trag den ersten Tag der letzten Periode ein und sieh, ob bei deiner Frau gerade Sonnenschein, Gewitter oder Sturm herrscht.</p>
+  </header>
+
+  <section class="card controls" aria-label="Eingaben">
+    <div class="label-row">
+      <label for="start">Erster Tag der letzten Periode</label>
+      <input type="date" id="start">
+    </div>
+    <div class="label-row">
+      <label for="len">Zykluslänge: <output id="lenOut" for="len">28 Tage</output></label>
+      <input type="range" id="len" min="24" max="38" step="1" value="28">
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <div id="app" style="display:flex;flex-direction:column;gap:20px"></div>
+
+  <p class="foot">Die Vorhersage ist ein Durchschnittsmodell. Jeder Körper tickt anders, Stress, Schlaf und Pille können alles verschieben. Nimm das Wetter als Hinweis und frag im Zweifel nach. Das ist Hormonbiologie und kein Charakterfehler.</p>
+</main>
+
+<script>
+(function(){
+  var KEY='zyklus-wetter-v1';
+  var S={
+    schon:{v:'--c-schon',name:'Schonzeit',phase:'Menstruation',
+      line:'Sie ist müde, hat vielleicht Krämpfe und will vor allem ihre Ruhe.',
+      what:'Die Hormone liegen auf dem Tiefpunkt, die Gebärmutter zieht sich zusammen. Bauchschmerzen, Rückenziehen und Müdigkeit sind normal. Die Stimmung ist eher still als gereizt.',
+      dos:['Wärmflasche, Tee und Schokolade bereitstellen','Abendessen und Haushalt übernehmen','Keine großen Pläne machen, Sofa-Abend anbieten'],
+      dont:'Den Zustand kleinreden oder sagen, sie solle sich nicht so anstellen.'},
+    auf:{v:'--c-auf',name:'Aufklarung',phase:'Follikelphase',
+      line:'Die Laune wird von Tag zu Tag besser und die Energie kommt zurück.',
+      what:'Das Östrogen steigt. Damit wachsen Energie, Antrieb und Lust auf Neues. Sie ist belastbarer und redet gern über Pläne.',
+      dos:['Ausflug oder Sport zu zweit vorschlagen','Jetzt passt auch mal ein heikles Thema','Gemeinsame Pläne schmieden'],
+      dont:'Fest darauf bauen, dass die gute Laune ewig hält.'},
+    sonne:{v:'--c-sonne',name:'Sonnenschein',phase:'Eisprung',
+      line:'Sie strahlt, ist selbstbewusst und gesprächig. Beste Zeit des Monats.',
+      what:'Der Östrogen-Gipfel und der Eisprung bringen die höchste Energie, die beste Laune und meist mehr Lust auf Nähe.',
+      dos:['Date-Abend, Ausflug oder Urlaubsplanung','Komplimente kommen jetzt besonders gut an','Wünsche äußern, die Chancen stehen gut'],
+      dont:'Die Tage auf dem Sofa verplempern.'},
+    ruhig:{v:'--c-ruhig',name:'Leicht bewölkt',phase:'Frühe Gelbkörperphase',
+      line:'Stabil und gelassen, aber die Energie nimmt langsam ab.',
+      what:'Das Progesteron übernimmt. Es beruhigt, macht aber auch müder und langsamer. Die Stimmung ist meist ausgeglichen.',
+      dos:['Gemütliche Abende und gemeinsames Kochen','Wichtige Entscheidungen jetzt noch besprechen','Früh ins Bett statt noch eine Serie'],
+      dont:'Streitthemen auf später verschieben. Später ist Gewitter.'},
+    gew:{v:'--c-gew',name:'Gewitterneigung',phase:'Späte Gelbkörperphase',
+      line:'Die Stimmung kann schnell kippen. Kleinigkeiten nerven.',
+      what:'Östrogen und Progesteron fallen, das Serotonin sinkt. Gereiztheit, Spannungsgefühl, Blähbauch und Heißhunger melden sich.',
+      dos:['Kleinigkeiten ohne Diskussion erledigen, etwa Müll und Spülmaschine','Stress und Termindruck von ihr fernhalten','Snacks und einen Spaziergang vorschlagen'],
+      dont:'Kritik üben oder Grundsatzdiskussionen anfangen.'},
+    sturm:{v:'--c-sturm',name:'Sturmwarnung',phase:'Prämenstruell, letzte Tage',
+      line:'Volle Sturmwarnung. Nimm nichts persönlich.',
+      what:'Das Hormontief kurz vor der Blutung ist am stärksten. Starke Reizbarkeit, Tränen, Erschöpfung, Heißhunger und schlechter Schlaf sind möglich. Sie ist nicht ungerecht, ihr Körper ist im Ausnahmezustand.',
+      dos:['Zuhören statt Lösungen anbieten','Wärmflasche, Lieblingsessen und früh ins Bett','Bei Streit ruhig bleiben, Pause vorschlagen und später klären'],
+      dont:'Fragen, ob sie ihre Tage hat. Das eskaliert garantiert.'}
+  };
+  var ORDER=['schon','auf','sonne','ruhig','gew','sturm'];
+
+  var start=null,L=28,sel=null,example=false,SC=[];
+
+  function todayN(){var n=new Date();return Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())/864e5}
+  function fmt(n,o){return new Date(n*864e5).toLocaleDateString('de-DE',Object.assign({timeZone:'UTC'},o))}
+  function iso(n){return new Date(n*864e5).toISOString().slice(0,10)}
+  function info(T){var diff=T-start,k=Math.floor(diff/L);return{d:diff-k*L+1,cs:start+k*L}}
+  function stOf(d){
+    var ov=L-14;
+    if(d<=3)return 'schon';
+    if(d>=L-2)return 'sturm';
+    if(d>=L-7)return 'gew';
+    if(d>=ov-1&&d<=ov+1)return 'sonne';
+    if(d<ov-1)return 'auf';
+    return 'ruhig';
+  }
+  function buildScores(){
+    var groups={},raw=[],d,s,arr,i,t;
+    for(d=1;d<=L;d++){s=stOf(d);(groups[s]=groups[s]||[]).push(d)}
+    for(d=1;d<=L;d++){
+      s=stOf(d);arr=groups[s];i=arr.indexOf(d);t=arr.length>1?i/(arr.length-1):0.5;
+      raw[d]=s==='schon'?40+8*t:s==='auf'?60+22*t:s==='sonne'?92+4*(1-Math.abs(2*t-1)):s==='ruhig'?78-16*t:s==='gew'?50-16*t:22-12*t;
+    }
+    var out=[];
+    for(d=1;d<=L;d++){
+      var p=d===1?L:d-1,n=d===L?1:d+1;
+      out[d]=0.25*raw[p]+0.5*raw[d]+0.25*raw[n];
+    }
+    return out;
+  }
+  function riskLabel(sc){return sc>=85?'kaum vorhanden':sc>=70?'niedrig':sc>=55?'mäßig':sc>=40?'erhöht':sc>=25?'hoch':'extrem'}
+
+  /* Wetter-Icons, viewBox 0 0 110 110 */
+  function cloud(f,dx,dy){return '<g transform="translate('+(dx||0)+' '+(dy||0)+')" fill="'+f+'"><circle cx="36" cy="68" r="13"/><circle cx="56" cy="56" r="19"/><circle cx="78" cy="65" r="15"/><rect x="36" y="66" width="42" height="15"/></g>'}
+  function sunG(cx,cy,r,rays){
+    var g='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="var(--sun)"/>';
+    if(rays){
+      var l='',i,a;
+      for(i=0;i<8;i++){a=i*Math.PI/4;
+        l+='<line x1="'+(cx+(r+5)*Math.cos(a)).toFixed(1)+'" y1="'+(cy+(r+5)*Math.sin(a)).toFixed(1)+'" x2="'+(cx+(r+13)*Math.cos(a)).toFixed(1)+'" y2="'+(cy+(r+13)*Math.sin(a)).toFixed(1)+'"/>';
+      }
+      g+='<g stroke="var(--sun)" stroke-width="4" stroke-linecap="round">'+l+'</g>';
+    }
+    return g;
+  }
+  var BOLT='<polygon points="60,66 46,90 57,90 50,108 72,80 61,80 68,66" fill="var(--bolt)"/>';
+  function rain(xs,y1,y2){
+    return '<g stroke="var(--rain)" stroke-width="4" stroke-linecap="round">'+xs.map(function(x){return '<line x1="'+x+'" y1="'+y1+'" x2="'+(x-4)+'" y2="'+y2+'"/>'}).join('')+'</g>';
+  }
+  function icon(k){
+    var b='';
+    if(k==='sonne')b=sunG(55,55,20,true);
+    else if(k==='auf')b=sunG(46,44,17,true)+cloud('var(--cloud)',10,12);
+    else if(k==='ruhig')b=sunG(38,38,13,true)+cloud('var(--cloud)',6,8);
+    else if(k==='schon')b=cloud('var(--cloud-d)',0,-8)+rain([40,56,72],82,96);
+    else if(k==='gew')b=cloud('var(--cloud-d)',0,-10)+BOLT;
+    else b=cloud('var(--cloud-d)',0,-12)+BOLT+rain([30,92],80,94);
+    return '<svg viewBox="0 0 110 110" aria-hidden="true" focusable="false">'+b+'</svg>';
+  }
+
+  function arc(cx,cy,r,a0,a1){
+    function p(a){return [cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)]}
+    var A=p(a0),B=p(a1);
+    return 'M'+A[0].toFixed(2)+' '+A[1].toFixed(2)+' A'+r+' '+r+' 0 '+((a1-a0)>180?1:0)+' 1 '+B[0].toFixed(2)+' '+B[1].toFixed(2);
+  }
+
+  function rel(i){return i===0?'heute':i===1?'morgen':'in '+i+' Tagen'}
+  function nextWhere(T0,pred){for(var i=0;i<=L*2;i++){if(pred(info(T0+i).d))return i}return null}
+
+  function heroHTML(T0,T){
+    var f=info(T),d=f.d,k=stOf(d),s=S[k],sc=SC[d],pos=Math.max(0,Math.min(100,100-sc)),prev=T!==T0;
+    return '<section class="card hero" style="--s:var('+s.v+')" aria-live="polite">'+
+      '<div class="hero-icon">'+icon(k)+'</div>'+
+      '<div class="hero-body">'+
+        '<p class="eyebrow">'+(prev?'Vorschau für ':'Heute, ')+fmt(T,{weekday:'long',day:'numeric',month:'long'})+(prev?' · <button class="link" data-t="'+T0+'">Zurück zu heute</button>':'')+'</p>'+
+        '<h2>'+s.name+'</h2>'+
+        '<p class="lead">'+s.line+'</p>'+
+        '<p class="meta">Zyklustag '+d+' von '+L+' · '+s.phase+'</p>'+
+        '<div><div class="gauge"><div class="pin" style="left:'+pos.toFixed(1)+'%"></div></div>'+
+        '<div class="gauge-l"><span>Sonne</span><span>Ausraster-Risiko: <b>'+riskLabel(sc)+'</b></span><span>Sturm</span></div></div>'+
+      '</div>'+
+      '<div class="plan">'+
+        '<div><h3>Dein Plan</h3><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><p class="what">'+s.what+'</p></div>'+
+        '<div class="dont"><b>Lieber nicht:</b> '+s.dont+'</div>'+
+      '</div>'+
+    '</section>';
+  }
+
+  function factsHTML(T0){
+    function tile(label,v,T,i,txt){
+      return '<div class="fact" style="--c:var('+v+')"><span class="k"><span class="dot"></span>'+label+'</span><span class="v">'+txt+'</span><span class="d">'+fmt(T0+i,{weekday:'short',day:'numeric',month:'numeric'})+'</span></div>';
+    }
+    var g=nextWhere(T0,function(d){return stOf(d)==='gew'}),
+        st=nextWhere(T0,function(d){return stOf(d)==='sturm'}),
+        pr=nextWhere(T0,function(d){return d===1});
+    return '<section class="facts" aria-label="Nächste Termine">'+
+      tile('Gewitterzone beginnt','--c-gew',0,g,g===0?'läuft gerade':rel(g))+
+      tile('Sturmwarnung beginnt','--c-sturm',0,st,st===0?'läuft gerade':rel(st))+
+      tile('Nächste Periode','--c-schon',0,pr,rel(pr))+
+    '</section>';
+  }
+
+  function forecastHTML(T0,T){
+    var out='',i,t,k,s;
+    for(i=0;i<7;i++){
+      t=T0+i;k=stOf(info(t).d);s=S[k];
+      out+='<button class="fc" style="--c:var('+s.v+')" data-t="'+t+'" aria-pressed="'+(t===T)+'" aria-label="'+fmt(t,{weekday:'long',day:'numeric',month:'long'})+': '+s.name+'">'+
+        '<span class="w">'+(i===0?'Heute':fmt(t,{weekday:'short'}))+'</span><span class="dt">'+fmt(t,{day:'numeric',month:'numeric'})+'.</span>'+icon(k)+'<span class="n">'+s.name+'</span></button>';
+    }
+    return '<section class="card"><div class="section-head"><h2>Die nächsten 7 Tage</h2><p>Tippe auf einen Tag, um die Prognose oben zu sehen.</p></div><div class="fc-row">'+out+'</div></section>';
+  }
+
+  function wheelHTML(cs,T,d0){
+    var step=360/L,gap=1.6,d,a0,a1,k,segs='',mid,mx,my;
+    for(d=1;d<=L;d++){
+      a0=-90+(d-1)*step+gap/2;a1=-90+d*step-gap/2;k=stOf(d);
+      segs+='<path d="'+arc(150,150,112,a0,a1)+'" fill="none" stroke="var('+S[k].v+')" stroke-width="30" data-t="'+(cs+d-1)+'" style="cursor:pointer"><title>Tag '+d+': '+S[k].name+'</title></path>';
+    }
+    mid=-90+(d0-0.5)*step;mx=150+112*Math.cos(mid*Math.PI/180);my=150+112*Math.sin(mid*Math.PI/180);
+    var marker='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="13" fill="var(--surface)" stroke="var(--ink)" stroke-width="4"/>';
+    var legend=ORDER.map(function(k){
+      var days=[],dd;for(dd=1;dd<=L;dd++){if(stOf(dd)===k)days.push(dd)}
+      return '<li><span class="dot" style="--c:var('+S[k].v+')"></span><span><b>'+S[k].name+'</b> <small>Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+'</small></span></li>';
+    }).join('');
+    return '<section class="card"><div class="section-head"><h2>Das Zyklusrad</h2><p>Oben beginnt Tag 1, dann geht es im Uhrzeigersinn rund. Der Ring markiert den gewählten Tag.</p></div>'+
+      '<div class="wheel-wrap"><div class="wheel"><svg viewBox="0 0 300 300" role="img" aria-label="Zyklusrad, gewählter Tag '+d0+' von '+L+'">'+segs+marker+
+      '<text x="150" y="146" text-anchor="middle" font-family="Bricolage Grotesque, Segoe UI, sans-serif" font-weight="800" font-size="64" style="fill:var(--ink)">'+d0+'</text>'+
+      '<text x="150" y="172" text-anchor="middle" font-size="15" style="fill:var(--muted)">von '+L+' Tagen</text>'+
+      '<text x="150" y="196" text-anchor="middle" font-size="15" style="fill:var(--muted)">'+fmt(T,{day:'numeric',month:'numeric'})+'.</text>'+
+      '</svg></div><ul class="legend">'+legend+'</ul></div></section>';
+  }
+
+  function calHTML(cs,T,T0){
+    var out='',i,t,k;
+    for(i=1;i<=L;i++){
+      t=cs+i-1;k=stOf(i);
+      out+='<button class="day'+(t===T0?' today':'')+'" style="--c:var('+S[k].v+')" data-t="'+t+'" aria-pressed="'+(t===T)+'" aria-label="Tag '+i+', '+fmt(t,{weekday:'long',day:'numeric',month:'long'})+': '+S[k].name+'">'+
+        '<span class="dn">'+i+'</span><span class="dd">'+fmt(t,{day:'numeric',month:'numeric'})+'.</span></button>';
+    }
+    return '<section class="card"><div class="section-head"><h2>Der ganze Zyklus</h2><p>Jedes Feld ist ein Tag: oben der Zyklustag, darunter das Datum. Der schwarze Punkt markiert heute.</p></div><div class="cal">'+out+'</div></section>';
+  }
+
+  function chartHTML(cs,d0){
+    var W=640,H=240,pl=112,pr=14,pt=14,pb=30,w=W-pl-pr,h=H-pt-pb;
+    function X(d){return pl+(d-1)/(L-1)*w}
+    function Y(v){return pt+(1-v/100)*h}
+    var bands=[[70,100,'--c-sonne','Sonnig',85],[50,70,'--c-ruhig','Wechselhaft',60],[30,50,'--c-gew','Gewitter',40],[0,30,'--c-sturm','Sturm',15]];
+    var bg=bands.map(function(b){
+      return '<rect x="'+pl+'" y="'+Y(b[1]).toFixed(1)+'" width="'+w+'" height="'+(Y(b[0])-Y(b[1])).toFixed(1)+'" fill="var('+b[2]+')" opacity=".14"/>'+
+             '<text x="'+(pl-10)+'" y="'+(Y(b[4])+5).toFixed(1)+'" text-anchor="end" font-size="17">'+b[3]+'</text>';
+    }).join('');
+    var pts=[],d;
+    for(d=1;d<=L;d++)pts.push(X(d).toFixed(1)+','+Y(SC[d]).toFixed(1));
+    var dots='';
+    for(d=1;d<=L;d++){
+      dots+='<circle cx="'+X(d).toFixed(1)+'" cy="'+Y(SC[d]).toFixed(1)+'" r="'+(d===d0?8:4.5)+'" fill="var('+S[stOf(d)].v+')" stroke="'+(d===d0?'var(--ink)':'var(--surface)')+'" stroke-width="'+(d===d0?3:2)+'"/>'+
+            '<circle cx="'+X(d).toFixed(1)+'" cy="'+Y(SC[d]).toFixed(1)+'" r="11" fill="transparent" data-t="'+(cs+d-1)+'" style="cursor:pointer"><title>Tag '+d+': '+S[stOf(d)].name+'</title></circle>';
+    }
+    var ticks=[1,7,14,21,L].filter(function(v,i,a){return a.indexOf(v)===i&&v<=L&&(v===L||L-v>=3)}).map(function(v){
+      return '<text x="'+X(v).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" font-size="16">Tag '+v+'</text>';
+    }).join('');
+    return '<section class="card chart"><div class="section-head"><h2>Stimmungskurve</h2><p>Je höher die Kurve, desto entspannter die Lage. Punkte sind antippbar.</p></div>'+
+      '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Stimmungskurve über '+L+' Zyklustage">'+bg+
+      '<line x1="'+X(d0).toFixed(1)+'" x2="'+X(d0).toFixed(1)+'" y1="'+pt+'" y2="'+(pt+h)+'" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="4 4"/>'+
+      '<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>'+dots+ticks+'</svg></section>';
+  }
+
+  function phasesHTML(k0){
+    return '<section><div class="section-head"><h2>Die Phasen im Detail</h2><p>Was in ihrem Körper passiert und wie du gut durch die Zeit kommst.</p></div><div class="phases">'+
+      ORDER.map(function(k){
+        var s=S[k],days=[],d;for(d=1;d<=L;d++){if(stOf(d)===k)days.push(d)}
+        return '<article class="phase'+(k===k0?' on':'')+'" style="--c:var('+s.v+')">'+
+          '<header>'+icon(k)+'<div><h3>'+s.name+'</h3><div class="range">Tag '+days[0]+(days.length>1?'–'+days[days.length-1]:'')+' · '+s.phase+'</div></div></header>'+
+          '<p>'+s.what+'</p><ul>'+s.dos.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul></article>';
+      }).join('')+'</div></section>';
+  }
+
+  function render(){
+    var T0=todayN(),T=sel==null?T0:sel,f=info(T),k=stOf(f.d);
+    SC=buildScores();
+    document.getElementById('app').innerHTML=
+      heroHTML(T0,T)+factsHTML(T0)+forecastHTML(T0,T)+wheelHTML(f.cs,T,f.d)+calHTML(f.cs,T,T0)+chartHTML(f.cs,f.d)+phasesHTML(k);
+    document.getElementById('hint').textContent=example
+      ?'Das ist ein Beispieldatum. Trag oben den echten ersten Tag der letzten Periode ein.'
+      :'Die Prognose passt sich sofort an. Deine Eingabe bleibt in diesem Browser gespeichert.';
+  }
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({start:start,len:L}))}catch(e){}}
+
+  try{
+    var st=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(st&&typeof st.start==='number'&&typeof st.len==='number'&&st.len>=24&&st.len<=38){start=st.start;L=st.len}
+  }catch(e){}
+  if(start==null){start=todayN()-11;example=true}
+
+  var startEl=document.getElementById('start'),lenEl=document.getElementById('len'),lenOut=document.getElementById('lenOut');
+  startEl.value=iso(start);lenEl.value=L;lenOut.textContent=L+' Tage';
+
+  startEl.addEventListener('change',function(){
+    var v=startEl.value;if(!v)return;
+    var p=v.split('-').map(Number);start=Date.UTC(p[0],p[1]-1,p[2])/864e5;
+    example=false;sel=null;save();render();
+  });
+  lenEl.addEventListener('input',function(){
+    L=+lenEl.value;lenOut.textContent=L+' Tage';sel=null;save();render();
+  });
+  document.getElementById('app').addEventListener('click',function(e){
+    var el=e.target.closest('[data-t]');if(!el)return;
+    sel=Number(el.getAttribute('data-t'));render();
+    var h=document.querySelector('.hero');
+    if(h){h.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
