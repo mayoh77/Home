@@ -4,181 +4,84 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wasserwaage</title>
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Doto:wght@700&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* Dot Design — siehe DESIGN.md */
   :root{
-    --bg: #14171A;
-    --bg-2: #0E1113;
-    --panel: #1D2226;
-    --panel-line: #2C3338;
-    --lcd-bg: #0A0D0A;
-    --lcd-digit: #8CFF6B;
-    --lcd-digit-dim: #2E4128;
-    --level-ok: #7CFF8F;
-    --liquid: #F2C14E;
-    --liquid-dim: #8A6A26;
-    --accent: #F2B705;
-    --text: #E7ECEE;
-    --text-dim: #8B979C;
-    --text-faint: #4E585C;
-    --font-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-lcd: 'SF Mono', 'DejaVu Sans Mono', 'Courier New', ui-monospace, monospace;
+    --bg:#000; --surface:#111; --surface-raised:#1b1b1b; --line:#2a2a2a;
+    --text:#fff; --text-2:#9a9a9a; --text-3:#5e5e5e; --dot-off:#242424; --accent:#d71921;
+    --font-dot:'Doto', ui-monospace, monospace;
+    --font-ui:'Space Grotesk', system-ui, sans-serif;
+    --font-mono:ui-monospace, 'SF Mono', Menlo, monospace;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#fff; --surface:#f3f3f3; --surface-raised:#eaeaea; --line:#ddd;
+      --text:#000; --text-2:#666; --text-3:#a6a6a6; --dot-off:#e3e3e3; color-scheme:light; }
   }
 
-  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :focus-visible{ outline:1px solid var(--text); outline-offset:3px; }
 
-  html, body{
-    margin: 0;
-    min-height: 100%;
-    background:
-      radial-gradient(140% 100% at 50% 0%, #22282C 0%, var(--bg) 55%, var(--bg-2) 100%);
-    color: var(--text);
-    font-family: var(--font-ui);
-    overscroll-behavior: none;
-  }
+  html, body{ margin:0; min-height:100%; background:var(--bg); color:var(--text);
+    font:400 14px/20px var(--font-ui); overscroll-behavior:none; }
 
-  .screen{
-    max-width: 430px;
-    margin: 0 auto;
-    min-height: 100vh;
-    padding: 26px 20px 34px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
+  .screen{ max-width:430px; margin:0 auto; min-height:100vh; padding:24px 16px 32px;
+    display:flex; flex-direction:column; gap:24px; }
 
-  header{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
+  header{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .title{ font:700 28px/32px var(--font-dot); letter-spacing:.5px; }
 
-  .title{
-    font-size: 19px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-  }
+  /* SegmentedControl: Pillen-Rahmen, gewähltes Segment invertiert */
+  .modes{ display:flex; border:1px solid var(--line); border-radius:999px; padding:3px; gap:2px; }
+  .modes button{ border:none; background:none; color:var(--text-2); min-height:38px; min-width:44px;
+    font:500 11px/14px var(--font-mono); letter-spacing:.05em; text-transform:uppercase;
+    padding:0 14px; border-radius:999px; cursor:pointer; transition:background .16s linear,color .16s linear; }
+  .modes button.active{ background:var(--text); color:var(--bg); }
 
-  .modes{
-    display: flex;
-    background: var(--panel);
-    border: 1px solid var(--panel-line);
-    border-radius: 10px;
-    padding: 3px;
-    gap: 3px;
-  }
-  .modes button{
-    border: none;
-    background: none;
-    color: var(--text-dim);
-    font-size: 12.5px;
-    font-family: var(--font-ui);
-    padding: 6px 11px;
-    border-radius: 7px;
-    cursor: pointer;
-  }
-  .modes button.active{
-    background: var(--accent);
-    color: #241C05;
-    font-weight: 600;
-  }
+  .status-line{ font:400 12px/16px var(--font-ui); color:var(--text-3); min-height:16px; }
 
-  .status-line{
-    font-size: 12px;
-    color: var(--text-faint);
-    text-align: center;
-    min-height: 16px;
-  }
+  /* Große Zahl in Punktschrift */
+  .lcd{ background:var(--surface); border-radius:16px; padding:24px 16px 16px; text-align:center; }
+  .lcd-value{ font:700 72px/76px var(--font-dot); letter-spacing:1px; color:var(--text-3);
+    transition:color .16s linear; }
+  .lcd-value .deg{ font-size:36px; }
+  .lcd.live .lcd-value, .lcd.level .lcd-value{ color:var(--text); }
+  .lcd-sub{ margin-top:8px; font:11px/14px var(--font-mono); letter-spacing:.05em; text-transform:uppercase; color:var(--text-3); }
+  .lcd.live .lcd-sub{ color:var(--text-2); }
+  .lcd.level .lcd-sub{ color:var(--text-2); }
+  .lcd.level .lcd-sub::before{ content:""; display:inline-block; width:6px; height:6px; border-radius:50%;
+    background:var(--accent); margin-right:8px; vertical-align:1px; }
 
-  .lcd{
-    background: var(--lcd-bg);
-    border: 1px solid #05070500;
-    border-radius: 16px;
-    padding: 20px 10px 16px;
-    text-align: center;
-    box-shadow: inset 0 0 0 1px #000, inset 0 2px 10px rgba(0,0,0,0.6);
-  }
-  .lcd-value{
-    font-family: var(--font-lcd);
-    font-size: 58px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--lcd-digit-dim);
-    text-shadow: none;
-    transition: color 0.25s ease, text-shadow 0.25s ease;
-  }
-  .lcd-value .deg{ font-size: 30px; }
-  .lcd.live .lcd-value{
-    color: var(--lcd-digit);
-    text-shadow: 0 0 10px rgba(140,255,107,0.35);
-  }
-  .lcd.level .lcd-value{
-    color: var(--level-ok);
-    text-shadow: 0 0 16px rgba(124,255,143,0.6);
-  }
-  .lcd-sub{
-    margin-top: 6px;
-    font-family: var(--font-lcd);
-    font-size: 13px;
-    color: var(--lcd-digit-dim);
-    letter-spacing: 1px;
-  }
-  .lcd.live .lcd-sub{ color: #4C6E44; }
-  .lcd.level .lcd-sub{ color: #3F7A4A; }
+  .stage{ display:flex; justify-content:center; padding:8px 0; touch-action:none; }
 
-  .stage{
-    display: flex;
-    justify-content: center;
-    padding: 6px 0 2px;
-    touch-action: none;
-  }
+  /* Bullseye: Haarlinien, weißer Punkt; rot = Wasserwaage steht */
+  .bullseye-ring{ fill:none; stroke:var(--line); }
+  .bullseye-tol{ fill:none; stroke:var(--text-3); stroke-width:1; stroke-dasharray:2 4; stroke-linecap:round; }
+  .bullseye-cross{ stroke:var(--line); stroke-width:1; }
+  .bubble{ transition:transform .12s linear; }
+  .bubble-core{ fill:var(--text); }
+  .bubble-core.ok{ fill:var(--accent); }
+  .bubble-glint{ display:none; }
 
-  /* Bullseye */
-  .bullseye-ring{ fill: none; stroke: var(--panel-line); }
-  .bullseye-tol{ fill: rgba(124,255,143,0.06); stroke: rgba(124,255,143,0.35); stroke-width: 1.5; }
-  .bullseye-cross{ stroke: var(--text-faint); stroke-width: 1; }
-  .bubble{
-    transition: transform 0.12s linear;
-  }
-  .bubble-core{ fill: url(#liquidGradient); }
-  .bubble-core.ok{ fill: url(#liquidGradientOk); }
-  .bubble-glint{ fill: rgba(255,255,255,0.35); }
+  .vial-body{ fill:none; stroke:var(--line); stroke-width:1; }
+  .vial-tolerance{ fill:var(--surface); }
+  .vial-tick{ stroke:var(--text-3); stroke-width:1; }
+  .vial-bubble{ fill:var(--text); transition:transform .12s linear; }
+  .vial-bubble.ok{ fill:var(--accent); }
 
-  /* Tube vial */
-  .vial-body{ fill: rgba(255,255,255,0.02); stroke: var(--panel-line); stroke-width: 2; }
-  .vial-tolerance{ fill: rgba(124,255,143,0.08); }
-  .vial-tick{ stroke: var(--text-faint); stroke-width: 1; }
-  .vial-bubble{ fill: url(#liquidGradient); transition: transform 0.12s linear; }
-  .vial-bubble.ok{ fill: url(#liquidGradientOk); }
+  .controls{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .ctrl-btn{ min-height:44px; padding:0 20px; border-radius:999px; border:1px solid var(--line);
+    background:none; color:var(--text); font:500 14px/20px var(--font-ui); cursor:pointer;
+    transition:background .16s linear,border-color .16s linear; }
+  .ctrl-btn:hover{ border-color:var(--text-3); }
+  .ctrl-btn:active{ background:var(--surface-raised); }
+  .ctrl-btn.primary{ background:var(--text); color:var(--bg); border-color:var(--text); }
 
-  .controls{
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-  .ctrl-btn{
-    background: var(--panel);
-    border: 1px solid var(--panel-line);
-    color: var(--text);
-    font-family: var(--font-ui);
-    font-size: 13.5px;
-    padding: 11px 18px;
-    border-radius: 12px;
-    cursor: pointer;
-  }
-  .ctrl-btn:active{ transform: scale(0.96); background: #262D31; }
-  .ctrl-btn.primary{
-    background: var(--accent);
-    color: #241C05;
-    font-weight: 600;
-    border: none;
-  }
-
-  .hint{
-    text-align: center;
-    font-size: 11.5px;
-    color: var(--text-faint);
-    line-height: 1.5;
-  }
+  .hint{ text-align:center; font:400 12px/16px var(--font-ui); color:var(--text-3); }
 </style>
 </head>
 <body>
@@ -202,18 +105,6 @@
   <div class="stage" id="stage">
     <!-- Bullseye level -->
     <svg id="bullseyeSvg" width="230" height="230" viewBox="0 0 230 230">
-      <defs>
-        <radialGradient id="liquidGradient" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="#FBE18C"/>
-          <stop offset="60%" stop-color="#F2C14E"/>
-          <stop offset="100%" stop-color="#B98A2E"/>
-        </radialGradient>
-        <radialGradient id="liquidGradientOk" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="#D9FFDD"/>
-          <stop offset="55%" stop-color="#7CFF8F"/>
-          <stop offset="100%" stop-color="#2E9A47"/>
-        </radialGradient>
-      </defs>
       <circle class="bullseye-ring" cx="115" cy="115" r="98" stroke-width="2"/>
       <circle class="bullseye-tol" cx="115" cy="115" r="26"/>
       <line class="bullseye-cross" x1="115" y1="30" x2="115" y2="200"/>
@@ -226,12 +117,6 @@
 
     <!-- Tube vial -->
     <svg id="vialSvg" width="320" height="90" viewBox="0 0 320 90" style="display:none">
-      <defs>
-        <radialGradient id="liquidGradientV" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="#FBE18C"/>
-          <stop offset="100%" stop-color="#B98A2E"/>
-        </radialGradient>
-      </defs>
       <rect class="vial-body" x="8" y="18" width="304" height="54" rx="27"/>
       <rect class="vial-tolerance" x="140" y="18" width="40" height="54"/>
       <line class="vial-tick" x1="160" y1="8" x2="160" y2="18"/>

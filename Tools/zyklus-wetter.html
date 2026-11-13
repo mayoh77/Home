@@ -2,11 +2,12 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zyklus-Wetter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Doto:wght@700&family=Space+Grotesk:wght@400;500&display=swap">
 <style>
 /* Layout: ein Wetterbericht. Eingabe oben, Tagesprognose als Hauptkarte, darunter Vorschau, Zyklusrad, Kalender, Verlaufskurve und Phasen. */
 :root{
@@ -180,6 +181,68 @@ details[open]>summary::after{transform:rotate(-135deg)}
   .day,.fc,.phase{transition:transform .12s}
   .day:hover,.fc:hover{transform:translateY(-2px)}
 }
+</style>
+
+<style>
+/* Dot Design — siehe DESIGN.md. Phasen werden über Graustufen gelesen, rot nur für Sturm. */
+:root{
+  --bg:#fff; --surface:#f3f3f3; --surface2:#eaeaea; --ink:#000; --muted:#666; --line:#ddd;
+  --accent:#000; --on-accent:#fff;
+  --c-sonne:#000; --c-auf:#3a3a3a; --c-schon:#6a6a6a; --c-ruhig:#9a9a9a; --c-gew:#c0c0c0; --c-sturm:#d71921;
+  --sun:#000; --cloud:#c8c8c8; --cloud-d:#8a8a8a; --bolt:#000; --rain:#666; --lust:#000;
+  --display:'Space Grotesk',system-ui,sans-serif; --body:'Space Grotesk',system-ui,sans-serif;
+  --dot:'Doto',ui-monospace,monospace; --mono:ui-monospace,'SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#000; --surface:#111; --surface2:#1b1b1b; --ink:#fff; --muted:#9a9a9a; --line:#2a2a2a;
+    --accent:#fff; --on-accent:#000;
+    --c-sonne:#fff; --c-auf:#d0d0d0; --c-schon:#9a9a9a; --c-ruhig:#6e6e6e; --c-gew:#4d4d4d; --c-sturm:#d71921;
+    --sun:#fff; --cloud:#3a3a3a; --cloud-d:#5e5e5e; --bolt:#fff; --rain:#9a9a9a; --lust:#fff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#000; --surface:#111; --surface2:#1b1b1b; --ink:#fff; --muted:#9a9a9a; --line:#2a2a2a;
+  --accent:#fff; --on-accent:#000;
+  --c-sonne:#fff; --c-auf:#d0d0d0; --c-schon:#9a9a9a; --c-ruhig:#6e6e6e; --c-gew:#4d4d4d; --c-sturm:#d71921;
+  --sun:#fff; --cloud:#3a3a3a; --cloud-d:#5e5e5e; --bolt:#fff; --rain:#9a9a9a; --lust:#fff;
+}
+body{font-size:14px;line-height:20px}
+.wrap{gap:24px}
+h1{font-family:var(--dot);font-weight:700;font-size:clamp(40px,9vw,64px);letter-spacing:1px;line-height:1.1}
+h2{font-weight:500;letter-spacing:0;font-size:1.25rem}
+h3{font-weight:500}
+:focus-visible{outline:1px solid var(--ink);outline-offset:3px}
+.card,.phase,.fact,.meter,.tile{border-radius:16px}
+.tile,.meter{border-radius:10px}
+.eyebrow,.tile b,.phase h4,.phase .tag,.now,.wd,.day .mo{font-family:var(--mono);letter-spacing:.05em;font-weight:400}
+.phase .tag{filter:none}
+.fact .v{font-weight:500}
+.day .dn{font-family:var(--dot);font-weight:700}
+.day,.fc{border-width:1px}
+.fc[aria-pressed=true],.day[aria-pressed=true]{outline:1px solid var(--ink);outline-offset:2px}
+.hero{background:var(--surface);border-color:var(--line)}
+.hero h2{color:var(--ink);filter:none;font-size:clamp(1.6rem,5vw,2.2rem)}
+.plan,.boost,.lust,.htabs,.subtabs{border-color:var(--line)}
+.dont{background:var(--surface2);border-radius:10px}
+.tipbox{background:var(--surface2)}
+.tile,.meter{border-color:var(--line)}
+.gauge{background:var(--line);height:2px;border-radius:0;margin:14px 0 10px}
+.pin{top:-9px;width:6px;height:6px;border:0;border-radius:50%;background:var(--c-sturm)}
+.link{font-weight:500}
+.now{background:none;border-color:var(--line);color:var(--muted)}
+.day.today::after{background:var(--c-sturm);width:6px;height:6px}
+.seg{height:6px}
+.seg.on{background:var(--ink)}
+.seg-nav{border-radius:999px;padding:3px}
+.seg-nav button{border-radius:999px;font-weight:500}
+.htabs button[aria-selected=true]{border-bottom-color:var(--ink)}
+.subtabs button[aria-selected=true]{border-bottom-color:var(--ink)}
+.controls input[type=date]{border-radius:0;border:0;border-bottom:1px solid var(--line);background:transparent;padding-inline:0}
+.controls input[type=date]:focus{outline:0;border-bottom-color:var(--ink)}
+.switch input,.controls input[type=range]{accent-color:var(--ink)}
+.chart text{font-family:var(--body)}
+@media (prefers-reduced-motion: no-preference){.day:hover,.fc:hover{transform:none}}
 </style>
 <style>html{-webkit-text-size-adjust:100%}body{margin:0}[hidden]{display:none!important}</style>
 </head>
@@ -519,7 +582,7 @@ details[open]>summary::after{transform:rotate(-135deg)}
     }).join('');
     return '<p class="note" style="margin:0 0 12px">Oben beginnt Tag 1, dann geht es im Uhrzeigersinn rund. Der Ring markiert den gewählten Tag.</p>'+
       '<div class="wheel-wrap"><div class="wheel"><svg viewBox="0 0 300 300" role="img" aria-label="Zyklusrad, gewählter Tag '+d0+' von '+L+'">'+segs+marker+
-      '<text x="150" y="146" text-anchor="middle" font-family="Bricolage Grotesque, Segoe UI, sans-serif" font-weight="800" font-size="64" style="fill:var(--ink)">'+d0+'</text>'+
+      '<text x="150" y="146" text-anchor="middle" font-family="Doto, ui-monospace, monospace" font-weight="700" font-size="64" style="fill:var(--ink)">'+d0+'</text>'+
       '<text x="150" y="172" text-anchor="middle" font-size="15" style="fill:var(--muted)">von '+L+' Tagen</text>'+
       '<text x="150" y="196" text-anchor="middle" font-size="15" style="fill:var(--muted)">'+fmt(T,{day:'numeric',month:'numeric'})+'</text>'+
       '</svg></div></div>';

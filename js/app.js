@@ -1,4 +1,4 @@
-/* app.js — UI utilities for WebFolio */
+/* app.js — UI-Helfer (Modal, Toast, Haptik) */
 
 // ── Modal ──────────────────────────────────────────────
 function openAddModal() {
@@ -57,3 +57,8 @@ function prettifyUrl(url) {
     return url;
   }
 }
+
+// ── Haptik: leichter Tick bei bewussten Interaktionen (nicht beim Scrollen)
+document.addEventListener("click", e => {
+  if (e.target.closest(".btn, .action-btn, .modal-close") && navigator.vibrate) navigator.vibrate(8);
+});
